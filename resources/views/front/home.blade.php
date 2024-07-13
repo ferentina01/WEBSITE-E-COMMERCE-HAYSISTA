@@ -144,7 +144,7 @@
         <section class="section-4 pt-5">
             <div class="container">
                 <div class="section-title">
-                    <h2>Produk Pilihan </h2>
+                    <h2>Produk Unggulan </h2>
                 </div>
                 <div class="row pb-3">
                     @if ($featuredproducts->isNotEmpty())
@@ -155,7 +155,7 @@
                             <div class="col-md-3">
                                 <div class="card product-card">
                                     <div class="product-image position-relative">
-                                        <a href="" class="product-img">
+                                        <a href="{{ route("front.product",$product->slug) }}" class="product-img">
 
                                             @if (!empty($productImage->image))
                                                 <img class="card-img-top"
@@ -163,10 +163,6 @@
                                             @else
                                                 No Image Found
                                             @endif
-
-
-
-
 
                                             <a class="whishlist" href="222"><i class="far fa-heart"></i></a>
 
@@ -208,7 +204,7 @@
                             <div class="col-md-3">
                                 <div class="card product-card">
                                     <div class="product-image position-relative">
-                                        <a href="" class="product-img">
+                                        <a href="{{ route("front.product",$product->slug) }}" class="product-img">
 
                                             @if (!empty($productImage->image))
                                                 <img class="card-img-top"

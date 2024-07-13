@@ -43,11 +43,23 @@
                                     </div>
                                     <div class="col-md-12">
                                         <div class="mb-3">
-                                            <label for="description">Deskripsi Produk</label>
-                                            <textarea name="description" id="description" cols="30" rows="10" class="summernote" placeholder="Description"
-                                                value="{{ $product->description }}"></textarea>
+                                            <label for="description">Sedikit Deskripsi Tentang Produk</label>
+                                                <textarea name="short_description" id="short_description" cols="30" rows="10" class="summernote" placeholder="">{{$product->short_description}}</textarea>
                                         </div>
                                     </div>
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label for="description">Deskripsi Produk</label>
+                                                <textarea name="description" id="description" cols="30" rows="10" class="summernote" placeholder="Description">{{$product->description}}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label for="description">pengiriman dan pengembalian</label>
+                                                <textarea name="shipping_returns" id="shipping_returns" cols="30" rows="10" class="summernote" placeholder="">{{$product->shipping_returns}}</textarea>
+                                        </div>
+                                    </div>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -127,7 +139,7 @@
                                             <label for="barcode">Barcode</label>
                                             <input type="text" name="barcode" id="barcode" class="form-control"
                                                 placeholder="Barcode" value="{{ $product->barcode }}">
-                                            <p class="error"></p>
+                                            
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -150,6 +162,22 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h2 class="h4 mb-3">Produk Terkait</h2>
+                                <div class="mb-3">
+                                    <select multiple class="related-product w-100" name="related_products[]" id= "related_products" >
+                                        @if(!empty($relatedProducts))
+                                            @foreach($relatedProducts as $relProduct)
+                                            <option selected value="{{ $relProduct->id  }}">{{ $relProduct->title }}</option>
+                                        @endforeach
+                                        @endif
+                                       
+                                    </select>
+                                    <p class="error"></p>
+                        </div>
+                    </div>
+                </div>
                     </div>
                     <div class="col-md-4">
                         <div class="card mb-3">
@@ -233,10 +261,12 @@
                     </div>
                 </div>
 
+                         
                 <div class="pb-5 pt-3">
                     <button type="submit" class="btn btn-primary">Buat Produk</button>
                     <a href="{{ route('products.index') }}" class="btn btn-outline-dark ml-3">Batalkan</a>
                 </div>
+            
             </div>
         </form>
         <!-- /.card -->
@@ -245,7 +275,23 @@
 @endsection
 
 @section('customJs')
-    <script>
+<script>
+
+$('.related-product').select2({
+    ajax: {
+        url: '{{ route("products.getProducts") }}',
+        dataType: 'json',
+        tags: true,
+        multiple: true,
+        minimumInputLength: 3,
+        processResults: function (data) {
+            return {
+                results: data.tags
+            };
+        }
+    }
+});
+
         $("#title").change(function() {
             element = $(this);
             $("button[type=submit]").prop('disabled', true);
@@ -342,90 +388,6 @@
             });
         });
 
-
-        // Dropzone.autoDiscover = false;
-        // const dropzone = $("#image").dropzone({
-
-        //     url: "{{ route('temp-images.create') }}",
-        //     maxFiles: 10,
-        //     paramName: 'image',
-        //     addRemoveLinks: true,
-        //     acceptedFiles: "image/jpeg,image/png,image/gif",
-        //     headers: {
-        //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        //     },
-        //     success: function(file, response) {
-        //         $("#image_id").val(response.image_id);
-        //         //console.log(response)
-
-
-
-
-        //         var html = `<div class="col-md-3"><div class="card">
-    //         <input type="hidden" name="image_array[]" value="${response.image_id}">
-    //         <img src="${response.ImagePath}" class="card-img-top" alt="">
-    //         <div class="card-body">
-    //             <a href="#" class="btn btn-danger">Delete</a>
-    //         </div>
-    //         </div>
-    //         </div>`;
-
-        //         //     $("#product-gallery").append(html);
-        //         // var html = ` 
-    //         //             <div class="card">
-    //         //                 <input type="hidden" name="image_array[]" value="${response.image_id}">
-    //         //                 <img src="${response.ImagePath}" class="card-img-top" alt="">
-    //         //                 <div class="card-body">
-    //         //                     <a href="#" class="btn btn-danger">Hapus</a>
-    //         //                 </div>
-    //         //             </div>`;
-
-        //          $("#product-gallery").append(html);
-
-        //     },
-
-
-        // });
-
-        // $("#productForm").submit(function(event) {
-        //     event.preventDefault();
-        //     var formArray = $(this).serializeArray();
-        //     $("button[type='submit']").prop('disabled', true);
-
-        //     $.ajax({
-        //         url: '{{ route('products.store') }}',
-        //         type: 'post',
-        //         data: formArray,
-        //         dataType: 'json',
-        //         success: function(response) {
-        //             $("button[type='submit']").prop('disabled', false);
-
-        //             if (response['status'] == true) {
-        //                 $(".error").removeClass('invalid-feedback').html('');
-        //                 $("input[type='text'], select, input[type='number']").removeClass('is-invalid');
-        //                 window.location.href = "{{ route('products.index') }}";
-        //             } else {
-        //                 var errors = response['errors'];
-
-        //                 $(".error").removeClass('invalid-feedback').html('');
-        //                 $("input[type='text'], select, input[type='number']").removeClass('is-invalid');
-
-        //                 $.each(errors, function(key, value) {
-        //                     $(`#${key}`).addClass('is-invalid')
-        //                         .siblings('p')
-        //                         .addClass('invalid-feedback')
-        //                         .html(value[0]);
-        //                 });
-        //             }
-        //         },
-        //         error: function() {
-        //             console.log("Something Went Wrong");
-        //         }
-        //     });
-        // });
-
-
-
         Dropzone.autoDiscover = false;
         const dropzone = $("#image").dropzone({
             url: "{{ route('product-images.update') }}",
@@ -479,5 +441,8 @@
                 });
             }
         }
-    </script>
+
+
+</script>
 @endsection
+

@@ -43,9 +43,22 @@
                                     </div>
                                     <div class="col-md-12">
                                         <div class="mb-3">
+                                            <label for="description">Sedikit Deskripsi Tentang Produk</label>
+                                            <textarea name="short_description" id="short_description" cols="30" rows="10" class="summernote"
+                                                placeholder=""></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
                                             <label for="description">Deskripsi Produk</label>
                                             <textarea name="description" id="description" cols="30" rows="10" class="summernote"
                                                 placeholder="Description"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label for="description">pengiriman dan pengembalian</label>
+                                            <textarea name="shipping_returns" id="shipping_returns" cols="30" rows="10" class="summernote" placeholder=""></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -88,20 +101,22 @@
                                         <div class="mb-3">
                                             <label for="price">Harga</label>
                                             <input type="text" name="price" id="price" class="form-control"
-                                                placeholder="Price"><p class="error"></p>
-                                            
+                                                placeholder="Price">
+                                            <p class="error"></p>
+
                                         </div>
                                     </div>
                                     <div class="col-md-12">
                                         <div class="mb-3">
                                             <label for="compare_price">Harga Compare</label>
                                             <input type="text" name="compare_price" id="compare_price"
-                                                class="form-control" placeholder="Compare Price"><p class="error"></p>
+                                                class="form-control" placeholder="Compare Price">
+                                            <p class="error"></p>
                                             <p class="text-muted mt-3">
                                                 Untuk menampilkan harga diskon, pindahkan harga asli produk ke harga "Harga
                                                 Compare". Masukkan harga yang lebih rendah ke dalam bidang "Harga"
                                             </p>
-                                            
+
                                         </div>
                                     </div>
                                 </div>
@@ -115,14 +130,16 @@
                                         <div class="mb-3">
                                             <label for="sku">SKU (Stock Keeping Unit)</label>
                                             <input type="text" name="sku" id="sku" class="form-control"
-                                                placeholder="sku"><p class="error"></p>
+                                                placeholder="sku">
+                                            <p class="error"></p>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="barcode">Barcode</label>
                                             <input type="text" name="barcode" id="barcode" class="form-control"
-                                                placeholder="Barcode"><p class="error"></p>
+                                                placeholder="Barcode">
+                                            <p class="error"></p>
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -144,7 +161,19 @@
                                 </div>
                             </div>
                         </div>
+                      <div class="card mb-3">
+                            <div class="card-body">
+                                <h2 class="h4 mb-3">Produk Terkait</h2>
+                                <div class="mb-3">
+                                    <select multiple class="related-product w-100" name="related_products[]" id= "related_products" >
+                                       
+                                    </select>
+                                    <p class="error"></p>
+                        </div>
                     </div>
+                </div>
+                    </div>
+
                     <div class="col-md-4">
                         <div class="card mb-3">
                             <div class="card-body">
@@ -172,7 +201,7 @@
                                         @endif
 
                                     </select>
-                                    
+
                                 </div>
                                 <div class="mb-3">
                                     <label for="category">Sub Kategori</label>
@@ -207,7 +236,8 @@
                                     <select name="is_featured" id="is_featured" class="form-control">
                                         <option value="No">Tidak</option>
                                         <option value="Yes">Iya</option>
-                                    </select><p class="error"></p>
+                                    </select>
+                                    <p class="error"></p>
                                 </div>
                             </div>
                         </div>
@@ -227,6 +257,23 @@
 
 @section('customJs')
     <script>
+        $('.related-product').select2({
+            ajax: {
+                url: '{{ route('products.getProducts') }}',
+                dataType: 'json',
+                tags: true,
+                multiple: true,
+                minimumInputLength: 3,
+                processResults: function(data) {
+                    return {
+                        results: data.tags
+                    };
+                }
+            }
+        });
+
+
+
         $("#title").change(function() {
             element = $(this);
             $("button[type=submit]").prop('disabled', true);
@@ -374,7 +421,7 @@
         //     $("button[type='submit']").prop('disabled', true);
 
         //     $.ajax({
-        //         url: '{{ route("products.store") }}',
+        //         url: '{{ route('products.store') }}',
         //         type: 'post',
         //         data: formArray,
         //         dataType: 'json',
@@ -405,7 +452,7 @@
         //     });
         // });
 
-      
+
 
         Dropzone.autoDiscover = false;
         const dropzone = $("#image").dropzone({
@@ -431,13 +478,13 @@
 
                 $("#product-gallery").append(html);
             },
-            complete: function(file){
+            complete: function(file) {
                 this.removeFile(file);
             }
 
         });
 
-        function deleteImage(id){
+        function deleteImage(id) {
             $("#image-row-" + id).remove();
 
             if (confirm('Apakah kamu yakin untuk menghapus foto ini?')) {
@@ -450,7 +497,7 @@
                     success: function(response) {
                         if (response.status == true) {
                             alert(response.message);
-                        } 
+                        }
                     }
                 });
             }

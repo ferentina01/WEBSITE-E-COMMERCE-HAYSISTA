@@ -51,93 +51,6 @@ class ProductController extends Controller
 
     }
 
-
-
-    // public function store(Request $request)
-
-    // {
-    //     // dd($request->image_array);
-    //     //  exit();
-    //     $rules = [
-    //         'title' => 'required',
-    //         'slug' => 'required|unique:products',
-    //         'price' => 'required|numeric',
-    //         'sku' =>'required|unique:products',
-    //         'track_qty' => 'required|in:Yes,No',
-    //         'category_id' => 'required|numeric',
-    //         'is_featured' => 'required|in:Yes,No',
-    //     ];
-
-    //     if(!empty($request->track_qty) && $request->track_qty == 'Yes' ){
-    //         $rules['qty'] = 'required|numeric';
-    //     }
-    //     $validator = Validator::make($request->all(), $rules);
-
-    //     if ($validator->fails()) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'errors' => $validator->errors()
-    //         ]);
-    //     }
-
-    //     if($validator->passes()){
-
-    //         $product = new Product;
-    //         $product->title = $request->title;
-    //         $product->slug = $request->slug;
-    //         $product->description = $request->description;
-    //         $product->price = $request->price;
-    //         $product->compare_price = $request->compare_price;
-    //         $product->sku = $request->sku;
-    //         $product->barcode = $request->barcode;
-    //         $product->track_qty = $request->track_qty;
-    //         $product->qty = $request->qty;
-    //         $product->status = $request->status;
-    //         $product->category_id = $request->category_id;
-    //         $product->sub_category_id = $request->sub_category_id;
-    //         $product->brand_id = $request->brand;
-    //         $product->is_featured = $request->is_featured;
-    //         $product->save();
-
-    //         $formattedPrice = 'Rp ' . number_format($product->price, 0, ',', '.');
-
-
-    //         //save galery
-    //         if (!empty($request->image_array)) {
-    //             foreach ($request->image_array as $temp_image_id) {
-    //                 // Ambil info gambar sementara dari database
-    //                     $tempImageInfo = TempImage::find($temp_image_id);
-    //                     $extArray = explode('.', $tempImageInfo->name);
-    //                     $ext = last($extArray);
-
-    //                     // Simpan info gambar ke dalam database
-    //                     $productImage = new ProductImage();
-    //                     $productImage->product_id = $product->id;
-    //                     $productImage->image = 'NULL';
-    //                     $productImage->save();
-
-    //                     $imageName = $product->id . '-' .$productImage->id . '-'.time().'.'. $ext;
-    //                     $productImage->image = $imageName;
-    //                     $productImage->save();
-
-    //                 $sourcePath = public_path('/temp/thumb/') . '/' . $tempImageInfo->name;
-    //                 $destPath = public_path('/uploads/products') . '/' . $tempImageInfo->name;
-    //                 File::move($sourcePath, $destPath);
-
-    //             }
-    //             }
-
-    //         session()->flash('success','Produk berhasil ditambahkan');
-
-    //         return response()->json([
-    //             'status' => true,
-    //             'message' => 'Produk berhasil ditambahkan'
-
-    //         ]);
-
-
-
-    // }}
     public function store(Request $request)
     {
         $rules = [
@@ -172,6 +85,10 @@ class ProductController extends Controller
             $product->sub_category_id = $request->sub_category_id;
             $product->brand_id = $request->brand;
             $product->is_featured = $request->is_featured;
+            $product->shipping_returns = $request->shipping_returns;
+            $product->short_description = $request->short_description;
+            $product->related_products = (!empty($request->related_products)) ? implode(',', $request->related_products) : '';
+
             $product->save();
 
             $formattedPrice = 'Rp ' . number_format($product->price, 0, ',', '.');
@@ -226,10 +143,18 @@ class ProductController extends Controller
         if(empty($product)){
             return redirect()->route('products.index')->with('error','Product Tidak Ditemukan');
         }
+        //dd($product->description);
 
         //fetch product images
         $productImages = ProductImage::where('product_id',$product->id)->get();
         $subCategories = SubCategory::where('category_id',$product->category_id)->get();
+
+        //fetch related product
+        $relatedProducts = [];
+        if($product->related_products != ''){
+            $productArray = explode(',',$product->related_products);
+            $relatedProducts = Product::whereIn('id',$productArray)->with('product_images')->get();
+        }
 
         $data = [];
         $categories = Category::orderBy('name', 'ASC')->get();
@@ -239,6 +164,7 @@ class ProductController extends Controller
         $data['product'] = $product;
         $data['subCategories'] = $subCategories;
         $data['productImages'] = $productImages;
+        $data['relatedProducts'] = $relatedProducts;
 
         
         return view('admin.products.edit', $data);
@@ -279,6 +205,9 @@ class ProductController extends Controller
             $product->sub_category_id = $request->sub_category_id;
             $product->brand_id = $request->brand;
             $product->is_featured = $request->is_featured;
+            $product->shipping_returns = $request->shipping_returns;
+            $product->short_description = $request->short_description;
+            $product->related_products = (!empty($request->related_products)) ? implode(',',$request->related_products): '';
             $product->save();
 
             $formattedPrice = 'Rp ' . number_format($product->price, 0, ',', '.');
@@ -337,6 +266,26 @@ class ProductController extends Controller
 
         // File::delete(public_path('/uploads/product') . '/' . $$product->image);
         
+        public function getProducts(Request $request){
+
+            $tempProduct = [];
+            if($request->term != ""){
+                $products = Product::where('title', 'like', '%'.$request->term.'%')->get();
+            }
+
+            if($products != null){
+
+                foreach($products as $product){
+                    $tempProduct[] = array('id' => $product->id, 'text' => $product->title);
+                }
+            }
+
+            return response()->json([
+                'tags'=> $tempProduct,
+                'status'=> true
+            ]);
+
+        }
 
     }
     

@@ -6,7 +6,7 @@
           <div class="container">
               <div class="light-font">
                   <ol class="breadcrumb primary-color mb-0">
-                      <li class="breadcrumb-item"><a class="white-text" href="#">Halaman Utama</a></li>
+                      <li class="breadcrumb-item"><a class="white-text" href="{{ route('front.home') }}">Halaman Utama</a></li>
                       <li class="breadcrumb-item active">Belanja</li>
                   </ol>
               </div>
@@ -104,16 +104,15 @@
                           <div class="col-12 pb-1">
                               <div class="d-flex align-items-center justify-content-end mb-4">
                                   <div class="ml-2">
-                                      <div class="btn-group">
-                                          <button type="button" class="btn btn-sm btn-light dropdown-toggle"
-                                              data-bs-toggle="dropdown">Sorting</button>
-                                          <div class="dropdown-menu dropdown-menu-right">
-                                              <a class="dropdown-item" href="#">Latest</a>
-                                              <a class="dropdown-item" href="#">Price High</a>
-                                              <a class="dropdown-item" href="#">Price Low</a>
-                                          </div>
-                                      </div>
-                                  </div>
+
+                          <select name="sort" id="sort" class="form-control">
+                            <option value="latest" {{ ($sort == 'latest') ? 'selected' : '' }}>Terbaru</option>
+                            <option value="price_desc" {{ ($sort == 'price_desc') ? 'selected' : '' }}>Harga Tinggi</option>
+                            <option value="price_asc" {{ ($sort == 'price_asc') ? 'selected' : '' }}>Harga Rendah</option>
+
+
+                          </select>
+                               </div>
                               </div>
                           </div>
 
@@ -129,7 +128,7 @@
                                           <div class="product-image position-relative">
 
 
-                                              <a href="#" class="product-img">
+                                              <a href="{{ route("front.product",$product->slug) }}" class="product-img">
 
                                                   @if (!empty($productImage->image))
                                                       <img class="ard-img-top"
@@ -163,20 +162,7 @@
 
 
                           <div class="col-md-12 pt-5">
-                              <nav aria-label="Page navigation example">
-                                  <ul class="pagination justify-content-end">
-                                      <li class="page-item disabled">
-                                          <a class="page-link" href="#" tabindex="-1"
-                                              aria-disabled="true">Previous</a>
-                                      </li>
-                                      <li class="page-item"><a class="page-link" href="#">1</a></li>
-                                      <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                      <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                      <li class="page-item">
-                                          <a class="page-link" href="#">Next</a>
-                                      </li>
-                                  </ul>
-                              </nav>
+                            {{ $products->links() }}
                           </div>
                       </div>
                   </div>
@@ -186,14 +172,14 @@
   @endsection
 
   @section('customJs')
-      <script>
+      {{-- <script>
           rangeSlider = $(".js-range-slider").ionRangeSlider({
               type: "double",
               min: 0,
               max: 2000000,
-              from: 0,
+              from: {{ $priceMin }},
               step: 100000,
-              to: 300000,
+              to: {{ $priceMax }},
               skin: "round",
               max_postfix: "+",
               prefix: "Rp",
@@ -227,5 +213,59 @@
 
               window.location.href = url + '&brand=' + brands.toString();
           }
-      </script>
+      </script> --}}
+<script>
+     
+    rangeSlider = $(".js-range-slider").ionRangeSlider({
+        type: "double",
+        min: 0,
+        max: 5000000,
+        from: {{ $priceMin }},
+        to: {{ $priceMax }},
+        step: 100000,
+        skin: "round",
+        max_postfix: "+",
+        prefix: "Rp",
+        onFinish: function() {
+            apply_filters();
+        }
+    });
+
+    var slider = $(".js-range-slider").data("ionRangeSlider");
+
+    $(".brand-label").change(function() {
+        apply_filters();
+    });
+
+    $("#sort").change(function(){
+        apply_filters();
+    });
+
+    function apply_filters() {
+        var brands = [];
+
+        $(".brand-label").each(function() {
+            if ($(this).is(":checked") == true) {
+                brands.push($(this).val());
+            }
+        });
+
+        var url = '{{ url()->current() }}?';
+
+        
+
+        //brand Filter
+        if (brands.length > 0){
+            url += '&brand=' + brands.toString();
+        }
+
+        //price range filter
+        url += '&price_min=' + slider.result.from + '&price_max=' + slider.result.to;
+
+        //sorting filter
+        url += '&sort=' + $("#sort").val();
+        window.location.href = url;
+    }
+
+</script>
   @endsection
