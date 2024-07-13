@@ -63,7 +63,7 @@
                         {!! $product->short_description !!}
                         <h2 class="price ">Rp {{ number_format($product->price, 0, ',', '.') }}</h2>
 
-                        <a href="cart.php" class="btn btn-dark"><i class="fas fa-shopping-cart"></i> &nbsp;ADD TO CART</a>
+                        <a href="javascript:void(0);" onclick="addToCart({{ $product->id }});" class="btn btn-dark"><i class="fas fa-shopping-cart"></i> Masukkan Keranjang</a>
                     </div>
                 </div>
 
@@ -73,17 +73,17 @@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="description-tab" data-bs-toggle="tab"
                                     data-bs-target="#description" type="button" role="tab" aria-controls="description"
-                                    aria-selected="true">Description</button>
+                                    aria-selected="true">Deskripsi</button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping"
-                                    type="button" role="tab" aria-controls="shipping" aria-selected="false">Shipping &
-                                    Returns</button>
+                                    type="button" role="tab" aria-controls="shipping" aria-selected="false">Pengiriman &
+                                    Pengembalian</button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews"
                                     type="button" role="tab" aria-controls="reviews"
-                                    aria-selected="false">Reviews</button>
+                                    aria-selected="false">Ulasan</button>
                             </li>
                         </ul>
                         <div class="tab-content" id="myTabContent">
@@ -108,7 +108,7 @@
     <section class="pt-5 section-8">
         <div class="container">
             <div class="section-title">
-                <h2>Related Products</h2>
+                <h2>Produk Serupa</h2>
             </div>
             <div class="col-md-12">
                 <div id="related-products" class="carousel">
@@ -135,8 +135,8 @@
                                     <a class="whishlist" href="222"><i class="far fa-heart"></i></a>
 
                                     <div class="product-action">
-                                        <a class="btn btn-dark" href="#">
-                                            <i class="fa fa-shopping-cart"></i> Add To Cart
+                                        <a class="btn btn-dark" href="javascript:void(0);" onclick="addToCart({{ $product->id }});">
+                                            <i class="fa fa-shopping-cart"></i> Masukkan Keranjang
                                         </a>
                                     </div>
                                 </div>
