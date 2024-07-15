@@ -120,7 +120,7 @@
                                     <div>Rp {{ Cart::subtotal() }}</div>
                                 </div>
                                 <div class="pt-5">
-                                    <a href="login.php" class="btn-dark btn btn-block w-100">Proses untuk Checkout</a>
+                                    <a href="{{ route('front.checkout') }}" class="btn-dark btn btn-block w-100">Proses untuk Checkout</a>
                                 </div>
                             </div>
                         </div>
