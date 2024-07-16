@@ -7,8 +7,8 @@
         <div class="container">
             <div class="light-font">
                 <ol class="breadcrumb primary-color mb-0">
-                    <li class="breadcrumb-item"><a class="white-text" href="{{ route("front.home") }}">Halaman Utama</a></li>
-                    <li class="breadcrumb-item"><a class="white-text" href="{{ route("front.shop") }}">Belanja</a></li>
+                    <li class="breadcrumb-item"><a class="white-text" href="{{ route('front.home') }}">Halaman Utama</a></li>
+                    <li class="breadcrumb-item"><a class="white-text" href="{{ route('front.shop') }}">Belanja</a></li>
                     <li class="breadcrumb-item">Keranjang</li>
                 </ol>
             </div>
@@ -21,7 +21,7 @@
                 @if (Session::has('Sukses'))
                     <div class="cold-md-12">
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {!! Session::get('Sukses') !!} 
+                            {!! Session::get('Sukses') !!}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     </div>
@@ -30,7 +30,7 @@
                 @if (Session::has('error'))
                     <div class="col-md-12">
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            {{Session::get('error') }}
+                            {{ Session::get('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     </div>
@@ -103,24 +103,19 @@
                     </div>
                     <div class="col-md-4">
                         <div class="card cart-summery">
-                            <div class="sub-title">
-                                <h2 class="bg-white">Ringkasan Keranjang</h3>
-                            </div>
+
                             <div class="card-body">
+                                <div class="sub-title">
+                                    <h2 class="bg-white">Ringkasan Keranjang</h2>
+                                </div>
                                 <div class="d-flex justify-content-between pb-2">
                                     <div>Subtotal</div>
                                     <div>Rp {{ Cart::subtotal() }}</div>
                                 </div>
-                                <div class="d-flex justify-content-between pb-2">
-                                    <div>Pengiriman</div>
-                                    <div>$20</div>
-                                </div>
-                                <div class="d-flex justify-content-between summery-end">
-                                    <div>Total</div>
-                                    <div>Rp {{ Cart::subtotal() }}</div>
-                                </div>
+
                                 <div class="pt-5">
-                                    <a href="{{ route('front.checkout') }}" class="btn-dark btn btn-block w-100">Proses untuk Checkout</a>
+                                    <a href="{{ route('front.checkout') }}" class="btn-dark btn btn-block w-100">Proses
+                                        untuk Checkout</a>
                                 </div>
                             </div>
                         </div>

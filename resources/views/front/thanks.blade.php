@@ -9,7 +9,7 @@
             </div>
             @endif
             <h1>TERIMAKASIH BANYAK SUDAH MEMESAN DI HAYSISTA SHOP"</h1>
-            <p> Pesanan Kamu : {{ $id }}</p>
+            <p> No.id pesanan Kamu : {{ $orderId }}</p>
         </div>
     </section>
 @endsection

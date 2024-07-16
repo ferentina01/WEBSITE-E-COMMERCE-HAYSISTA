@@ -57,28 +57,51 @@ class AuthController extends Controller
             'password' => 'required',
 
         ]);
-        if ($validator->passes()){
+        // if ($validator->passes()){
 
-            if(Auth::attempt(['email' => $request->email, 'password' => $request->password], $request->get('remember'))){
-                    return redirect()->route('account.profile');
+        //     if(Auth::attempt(['email' => $request->email, 'password' => $request->password], $request->get('remember'))){
+        //             return redirect()->route('account.profile');
 
+        //         if (session()->has('url.intended')) {
+        //             return redirect(session()->get('url.intended'));
+        //         }
+        //         return redirect()->route('account.profile');
+
+        //     }else{
+        //     //session()->flash('error', 'email/sandi anda salah' );
+        //     return redirect()->route('account.login')
+        //     ->withInput($request->only('email'))
+        //     ->with('error', 'email/sandi anda salah' );
+
+        // }
+        // }else{
+        //     return redirect()->route('account.login')
+        //     ->withErrors($validator)
+        //     ->withInput($request->only('email'));
+        // }
+        if ($validator->passes()) {
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password], $request->get('remember'))) {
+                // Jika ada intended URL, arahkan ke intended URL
                 if (session()->has('url.intended')) {
-                    return redirect(session()->get('url.intended'));
+                    $intendedUrl = session()->get('url.intended');
+                    session()->forget('url.intended'); // Hapus intended URL setelah digunakan
+                    return redirect($intendedUrl);
                 }
+
+                // Jika tidak ada intended URL, arahkan ke halaman profil
                 return redirect()->route('account.profile');
-
-            }else{
-            //session()->flash('error', 'email/sandi anda salah' );
-            return redirect()->route('account.login')
-            ->withInput($request->only('email'))
-            ->with('error', 'email/sandi anda salah' );
-
-        }
-        }else{
+            } else {
+                return redirect()->route('account.login')
+                ->withInput($request->only('email'))
+                    ->with('error', 'Email/sandi Anda salah.');
+            }
+        } else {
             return redirect()->route('account.login')
             ->withErrors($validator)
-            ->withInput($request->only('email'));
+                ->withInput($request->only('email'));
         }
+
+
     }
 
     public function profile(){

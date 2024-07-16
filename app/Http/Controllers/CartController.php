@@ -13,6 +13,11 @@ use App\Models\CustomerAddress;
 use Illuminate\Support\Facades\Log;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Shipping;
+use App\Models\ShippingCharge;
+use Illuminate\Validation\Rules\Can;
+
+// Illuminate\Support\Facades\Log;
 
 
 class CartController extends Controller
@@ -154,37 +159,71 @@ class CartController extends Controller
             return redirect()->route('front.cart');
         }
 
-
-        //jika pengguna belum login arahkan ke halaman login
         if (Auth::check() == false) {
-            if (!session()->has('url.intended')) {
-                session(['url.intended' => url()->current()]);
-            }
-            return redirect()->route('account.login');
-        }
+        session()->put('url.intended', route('front.checkout'));
+        return redirect()->route('account.login');
+         }
 
         $customerAddress = CustomerAddress::where('user_id',Auth::user()->id)->first();
         session()->forget('url.intended');
 
         $province = Province::orderBy('name', 'ASC')->get(); // Mengambil data dari tabel 'province'
-        return view('front.checkout', [
-            'province' => $province, // Menetapkan variabel 'province' ke blade template        ]);
-            'customerAddress' => $customerAddress 
-        ]);
+
+        //kalkulasi pengiriman
+        if($customerAddress != ''){
+        $userProvince = $customerAddress->province_id;
+        $shippingInfo = ShippingCharge::where('province_id', $userProvince)->first();
+
+        $totalQty = 0;
+        $totalShippingCharge = 0;
+
+        foreach (Cart::content() as $item) {
+            $totalQty += $item->qty;
+        }
+
+        $totalShippingCharge = $totalQty * $shippingInfo->amount;
+
+        $subtotal = str_replace(',', '', Cart::subtotal());
+        $subtotalNumeric = floatval($subtotal); // Ubah ke nilai numerik
+
+        $grandTotal = $subtotalNumeric + $totalShippingCharge;
+        }else{
+            $grandTotal = Cart::subtotal(2,'.','');
+            $subtotalNumeric = floatval(str_replace(',', '', $grandTotal)); // Definisikan $subtotalNumeric jika $customerAddress kosong
+
+            $totalShippingCharge = 0;
+        }
+
+        
+        return view('front.checkout',[
+            'province' => $province,
+            'customerAddress' => $customerAddress, 
+            'totalShippingCharge' => $totalShippingCharge,
+            'subtotalNumeric' => $subtotalNumeric,
+            'grandTotal' => $grandTotal,
+            
+
+            ]);
     }
+
+
+       
 
     public function processCheckout(Request $request)
     {
 
-        // step - 1 Apply Validation
-        // $validator = Validator::make($request->all(), [
-        //     'nama_depan' => 'required|min:5', 'nama_belakang' => 'required', 'email' => 'required|email', 'provinces' => 'required', 'alamat' => 'required|min:30', 'kota' => 'required', 'kecamatan' => 'required', 'kode_pos' => 'required', 'phone' => 'required'
-        // ]);
+
         // Step - 1 Apply Validation
         $validator = Validator::make($request->all(), [
-
-            'first_name' => 'required|min:5', 'last_name' => 'required', 'email' => 'required|email', 'province' => 'required', 'address' => 'required|min:30',
-            'city' => 'required', 'subdistrict' => 'required', 'zip' => 'required', 'mobile' => 'required'
+            'first_name' => 'required|min:5',
+            'last_name' => 'required',
+            'email' => 'required|email',
+            'province' => 'required',
+            'address' => 'required|min:30',
+            'city' => 'required',
+            'subdistrict' => 'required',
+            'zip' => 'required',
+            'mobile' => 'required'
         ]);
 
 
@@ -195,41 +234,55 @@ class CartController extends Controller
                 'errors' => $validator->errors()
             ]);
         }
-        
-
-
-       
             // step 2 save user adddress //$customerAddress = CustomerAddress::find();
             $user = Auth::user();
             $customerAddress = CustomerAddress::updateOrCreate(
             ['user_id' => $user->id],
             [
-
                 'user_id' => $user->id,
-                'first_name' => $request->first_name, 'last_name' => $request->last_name, 'email' => $request->email, 'mobile' => $request->mobile, 'province_id' => $request->province, 'address' => $request->address,
-                'apartment' => $request->apartment, 'city' => $request->city,
-                'subdistrict' => $request->subdistrict, 'zip' => $request->zip,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'mobile' => $request->mobile,
+                'province_id' => $request->province,
+                'address' => $request->address,
+                'apartment' => $request->apartment,
+                'city' => $request->city,
+                'subdistrict' => $request->subdistrict,
+                'zip' => $request->zip,
             ]
         );
-        // if ($customerAddress) {
-        //     return response()->json([
-        //         'message' => 'Address saved successfully',
-        //         'status' => true
-        //     ]);
-        // } else {
-        //     return response()->json([
-        //         'message' => 'Failed to save address',
-        //         'status' => false
-        //     ]);
-        // }
-
         
         // step - 3 store data in orders table
+
             if ($request->payment_method == 'cod') {
             $shipping = 0;
             $discount = 0;
-            $subTotal = Cart::subtotal(2, '.','');
-            $grandTotal = $subTotal+$shipping;
+            $subTotal = Cart::subtotal(2, '.', '');
+            $grandTotal = $subTotal + $shipping;
+
+            //calculate shipping
+
+            
+
+           $shippingInfo = ShippingCharge::where('province_id', $request->province)->first();
+
+            $totalQty = 0;
+            foreach (Cart::content() as $item) {
+                $totalQty += $item->qty;
+            }
+
+            if ($shippingInfo != null) {
+                $shipping = $totalQty*$shippingInfo->amount;
+                $grandTotal = $subTotal+$shipping;
+
+                // return response()->json([
+                //     'status' => true,
+                //     'grandTotal' => 'Rp ' . number_format($grandTotal, 0, ',', '.'),
+                //     'shipping' => 'Rp ' . number_format($shipping, 0, ',', '.'),
+                // ]);
+            }
+        }
 
             $order = new Order;
             $order->subtotal = $subTotal;
@@ -272,17 +325,53 @@ class CartController extends Controller
                 'status' => true,
                 
             ]);
-        }else{
-
         }
-    }
 
-    public function thankyou($id){
+    public function thankyou($orderId){
 
         
         return view('front.thanks',[
-            'id' => $id
+            'orderId' => $orderId
         ]);
     }
 
+    
+        public function getOrderSummery (Request $request) {
+        $subTotal = Cart::subtotal(2, '.', '');
+        $subtotalNumeric = floatval(str_replace(',', '', $subTotal)); // Ubah ke nilai numerik
+
+
+
+            // $grandTotal = 0; 
+            if ($request->province_id > 0) {
+                $shippingInfo = ShippingCharge::where('province_id', $request->province_id)->first();
+
+            $totalQty = 0;
+            foreach (Cart::content() as $item) {
+                $totalQty += $item->qty;
+            }
+
+
+            if ($shippingInfo != null) {
+                $shippingCharge = $totalQty * $shippingInfo->amount;
+                $grandTotal = $subTotal + $shippingCharge;
+
+                return response()->json([
+                    'status' => true,
+                    'grandTotal' => 'Rp ' . number_format($grandTotal, 0, ',', '.'),
+                    'shippingCharge' => 'Rp ' . number_format($shippingCharge, 0, ',', '.'),
+                ]);
+            }
+        }
+
+        // Jika $request->province_id <= 0 atau $shippingInfo == null
+            return response()->json([
+            'status' => true,
+            'grandTotal' => 'Rp ' . number_format($subtotalNumeric, 0, ',', '.'),
+            'shippingCharge' => 'Rp 0',
+            ]);
+
+        }
+
+        
 }

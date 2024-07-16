@@ -45,7 +45,7 @@
 							</li>
 							
 							<li class="nav-item">
-								<a href="#" class="nav-link">
+								<a href="{{ route('products.index') }}" class="nav-link">
 									<!-- <i class="nav-icon fas fa-tag"></i> -->
 									<i class="fas fa-truck nav-icon"></i>
 									<p>Pengiriman</p>
@@ -58,7 +58,7 @@
 								</a>
 							</li>
 							<li class="nav-item">
-								<a href="discount.html" class="nav-link">
+								<a href="coupons.index" class="nav-link">
 									<i class="nav-icon  fa fa-percent" aria-hidden="true"></i>
 									<p>Diskon</p>
 								</a>
