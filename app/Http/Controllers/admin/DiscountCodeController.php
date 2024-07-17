@@ -30,6 +30,7 @@ class DiscountCodeController extends Controller
         $discountCoupons = DiscountCoupon::latest();
         if (!empty($request->get('keyword'))) {
             $discountCoupons = $discountCoupons->where('name', 'like', '%' . $request->get('keyword'). '%');
+            $discountCoupons = $discountCoupons->orwhere('code', 'like', '%' . $request->get('keyword'). '%');
         }
         $discountCoupons = $discountCoupons->paginate(10);
         return view('admin.coupon.list', compact('discountCoupons'));
@@ -100,7 +101,7 @@ class DiscountCodeController extends Controller
                 $discountCode->save();
 
                 $message = 'Kupon Diskon Berhasil Ditambahkan';
-                session()->flash('succes',$message);
+                session()->flash('success',$message);
 
                 return response()->json([
                     'status' => true,
@@ -122,8 +123,113 @@ class DiscountCodeController extends Controller
 
         $coupon = DiscountCoupon::find($id);
 
-        return view('admin.coupon.edit');
+        if($coupon == null){
+            session()->flash('error', 'Data Tidak ditemukan');
+            return redirect()->route('coupons.index');
+        }
+
+        $data['coupon'] = $coupon;
+
+        return view('admin.coupon.edit', $data);
 
     }
     
+    public function update(Request $request, $id){
+        $discountCode =  DiscountCoupon::find($id);
+
+        if($discountCode == null){
+            session()->flash('error', 'Data tidaka ditemukan');
+            return response()->json([
+                'status' => true,
+             
+            ]);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'code' => 'required',
+            'type' => 'required',
+            'discount_amount' => 'required|numeric',
+            'status' => 'required',
+            'name' => 'required|string|max:255',
+        ]);
+
+        if ($validator->passes()) {
+
+            //tanggal kadaluarsa harus lebih besar dari tanggal mulai
+            if (!empty($request->starts_at) && !empty($request->expires_at)) {
+                $expiresAt = Carbon::createFromFormat('Y-m-d H:i:s', $request->expires_at);
+                $startAt =  Carbon::createFromFormat('Y-m-d H:i:s', $request->starts_at);
+
+
+                if ($expiresAt->gt($startAt) == false) {
+                    return response()->json([
+
+                        'status' => false,
+                        'errors' => ['expires_at' => 'Tanggal kadaluarsa harus lebih besar dari tanggal mulai']
+                    ]);
+                }
+            }
+
+
+           
+            $discountCode->code = $request->code;
+            $discountCode->name = $request->name;
+            $discountCode->description = $request->description;
+            $discountCode->max_uses = $request->max_uses;
+            $discountCode->max_uses_user = $request->max_uses_user;
+            $discountCode->type = $request->type;
+            $discountCode->discount_amount = $request->discount_amount;
+            $discountCode->min_amount = $request->min_amount;
+            $discountCode->status = $request->status;
+            $discountCode->starts_at = $request->starts_at;
+            $discountCode->expires_at = $request->expires_at;
+            $discountCode->save();
+
+            $message = 'Kupon Diskon Berhasil diubah';
+            session()->flash('success', $message);
+
+            return response()->json([
+                'status' => true,
+                'message' => $message
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors()
+
+            ]);
+        }
+
+    }
+
+    
+    public function destroy (Request $request, $id) 
+    { 
+        
+        $discountCode = DiscountCoupon::find($id);
+           
+        if ($discountCode == null) {
+            session()->flash('error', 'Record not found'); 
+            return response()->json([
+                'status' => true
+            ]);
+        }
+
+        $discountCode->delete();
+
+        session()->flash('success', 'Discount Coupon deleted successfully.');
+        return response()->json([
+        'status' => true
+        ]);
+
+}
+  
+
+
+
+
+
+
+
+
 }

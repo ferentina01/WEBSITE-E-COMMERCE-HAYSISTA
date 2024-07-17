@@ -10,7 +10,7 @@
                     <h1> Managemen Pengiriman</h1>
                 </div>
                 <div class="col-sm-6 text-right">
-                    <a href="{{ route('shipping.index') }}" class="btn btn-primary">Kembali</a>
+                    <a href="{{ route('shipping.create') }}" class="btn btn-primary">Kembali</a>
                 </div>
             </div>
         </div>

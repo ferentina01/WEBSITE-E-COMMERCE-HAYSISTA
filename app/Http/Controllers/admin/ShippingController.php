@@ -11,6 +11,11 @@ use App\Models\ShippingCharge;
 
 class ShippingController extends Controller
 {
+
+    public function index(Request $request){
+
+        
+    }
     public function create()
     {
         $provinces = Province::get();

@@ -16,6 +16,10 @@ use App\Models\OrderItem;
 use App\Models\Shipping;
 use App\Models\ShippingCharge;
 use Illuminate\Validation\Rules\Can;
+use Illuminate\Support\Carbon;
+use App\Models\DiscountCoupon;
+
+
 
 // Illuminate\Support\Facades\Log;
 
@@ -153,6 +157,7 @@ class CartController extends Controller
 
     public function checkout()
     {
+        $discount = 0;
 
         //if keranjang kosong alihkan ke halaman keranjang
         if (Cart::count() == 0) {
@@ -160,54 +165,73 @@ class CartController extends Controller
         }
 
         if (Auth::check() == false) {
-        session()->put('url.intended', route('front.checkout'));
-        return redirect()->route('account.login');
-         }
-
-        $customerAddress = CustomerAddress::where('user_id',Auth::user()->id)->first();
-        session()->forget('url.intended');
-
-        $province = Province::orderBy('name', 'ASC')->get(); // Mengambil data dari tabel 'province'
-
-        //kalkulasi pengiriman
-        if($customerAddress != ''){
-        $userProvince = $customerAddress->province_id;
-        $shippingInfo = ShippingCharge::where('province_id', $userProvince)->first();
-
-        $totalQty = 0;
-        $totalShippingCharge = 0;
-
-        foreach (Cart::content() as $item) {
-            $totalQty += $item->qty;
+            session()->put('url.intended', route('front.checkout'));
+            return redirect()->route('account.login');
         }
 
-        $totalShippingCharge = $totalQty * $shippingInfo->amount;
+        // Ambil alamat pelanggan jika sudah tersimpan
+        $customerAddress = CustomerAddress::where('user_id', Auth::user()->id)->first();
+        session()->forget('url.intended');
 
-        $subtotal = str_replace(',', '', Cart::subtotal());
-        $subtotalNumeric = floatval($subtotal); // Ubah ke nilai numerik
+        // Ambil daftar provinsi
+        $province = Province::orderBy('name', 'ASC')->get(); // Mengambil data dari tabel 'province'
 
-        $grandTotal = $subtotalNumeric + $totalShippingCharge;
-        }else{
-            $grandTotal = Cart::subtotal(2,'.','');
-            $subtotalNumeric = floatval(str_replace(',', '', $grandTotal)); // Definisikan $subtotalNumeric jika $customerAddress kosong
+        // // Inisialisasi variabel totalShippingCharge dan grandTotal
+        // $grandTotal = 0;
+        $subTotal = Cart::subtotal(0, '.', '');
+        // //apply diskon 
+        if (session()->has('code')) {
+            $code = session()->get('code');
 
+            if ($code->type == 'percent') {
+                $discount = ($code->discount_amount / 100) * $subTotal;
+            } else {
+                $discount = $code->discount_amount;
+            }
+        }
+
+
+        //kalkulasi pengiriman
+        if ($customerAddress != '') {
+            $userProvince = $customerAddress->province_id;
+            $shippingInfo = ShippingCharge::where('province_id', $userProvince)->first();
+
+            $totalQty = 0;
+            $totalShippingCharge = 0;
+            $grandTotal = 0;
+
+            foreach (Cart::content() as $item) {
+                $totalQty += $item->qty;
+            }
+
+            $totalShippingCharge = $totalQty * $shippingInfo->amount;
+            $grandTotal = ($subTotal - $discount) + $totalShippingCharge;
+            // if ($shippingInfo) {
+            //     $totalShippingCharge = $totalQty * $shippingInfo->amount;
+            // }
+
+            // $grandTotal = ($subTotal - $discount) + $totalShippingCharge;
+
+
+        } else {
+            $grandTotal = ($subTotal - $discount);
             $totalShippingCharge = 0;
         }
 
-        
-        return view('front.checkout',[
-            'province' => $province,
-            'customerAddress' => $customerAddress, 
-            'totalShippingCharge' => $totalShippingCharge,
-            'subtotalNumeric' => $subtotalNumeric,
-            'grandTotal' => $grandTotal,
-            
 
-            ]);
+        return view('front.checkout', [
+            'province' => $province,
+            'customerAddress' => $customerAddress,
+            'totalShippingCharge' => $totalShippingCharge,
+            'discount' => $discount,
+            'grandTotal' => $grandTotal,
+
+
+        ]);
     }
 
+    //
 
-       
 
     public function processCheckout(Request $request)
     {
@@ -234,9 +258,9 @@ class CartController extends Controller
                 'errors' => $validator->errors()
             ]);
         }
-            // step 2 save user adddress //$customerAddress = CustomerAddress::find();
-            $user = Auth::user();
-            $customerAddress = CustomerAddress::updateOrCreate(
+        // step 2 save user adddress //$customerAddress = CustomerAddress::find();
+        $user = Auth::user();
+        $customerAddress = CustomerAddress::updateOrCreate(
             ['user_id' => $user->id],
             [
                 'user_id' => $user->id,
@@ -252,20 +276,33 @@ class CartController extends Controller
                 'zip' => $request->zip,
             ]
         );
-        
+
         // step - 3 store data in orders table
 
-            if ($request->payment_method == 'cod') {
+        if ($request->payment_method == 'cod') {
+            $discountCodeId = '';
+            $promoCode = '';
             $shipping = 0;
             $discount = 0;
-            $subTotal = Cart::subtotal(2, '.', '');
-            $grandTotal = $subTotal + $shipping;
+            $subTotal = Cart::subtotal(0, '.', '');
+            // $grandTotal = $subTotal + $shipping;
 
-            //calculate shipping
+            //apply diskon 
+            if (session()->has('code')) {
+                $code = session()->get('code');
 
-            
+                if ($code->type == 'percent') {
+                    $discount = ($code->discount_amount / 100) * $subTotal;
+                } else {
+                    $discount = $code->discount_amount;
+                }
 
-           $shippingInfo = ShippingCharge::where('province_id', $request->province)->first();
+                $discountCodeId = $code->id;
+                $promoCode  = $code->code;
+            }
+
+            //calculate shipping  
+            $shippingInfo = ShippingCharge::where('province_id', $request->province)->first();
 
             $totalQty = 0;
             foreach (Cart::content() as $item) {
@@ -273,21 +310,20 @@ class CartController extends Controller
             }
 
             if ($shippingInfo != null) {
-                $shipping = $totalQty*$shippingInfo->amount;
-                $grandTotal = $subTotal+$shipping;
+                $shipping = $totalQty * $shippingInfo->amount;
+                $grandTotal = ($subTotal-$discount) + $shipping;
 
-                // return response()->json([
-                //     'status' => true,
-                //     'grandTotal' => 'Rp ' . number_format($grandTotal, 0, ',', '.'),
-                //     'shipping' => 'Rp ' . number_format($shipping, 0, ',', '.'),
-                // ]);
+               
             }
-        }
 
+            
             $order = new Order;
             $order->subtotal = $subTotal;
             $order->shipping = $shipping;
             $order->grand_total = $grandTotal;
+            $order->discount = $discount;
+            $order->coupon_code_id = $discountCodeId;
+            $order->coupon_code = $promoCode;
             $order->user_id = $user->id;
             $order->first_name = $request->first_name;
             $order->last_name = $request->last_name;
@@ -301,51 +337,72 @@ class CartController extends Controller
             $order->notes = $request->notes;
             $order->province_id = $request->province;
             $order->save();
-   
+        }
 
 
         // step - 4 store order items in order items table 
         foreach (Cart::content() as $item) {
-        $orderItem = new OrderItem;
-        $orderItem->product_id = $item->id;
-        $orderItem->order_id = $order->id;
-        $orderItem->name = $item->name;
-        $orderItem->qty = $item->qty;
-        $orderItem->price = $item->price;
-        $orderItem->total = $item->price * $item->qty;
-        $orderItem->save();
+            $orderItem = new OrderItem;
+            $orderItem->product_id = $item->id;
+            $orderItem->order_id = $order->id;
+            $orderItem->name = $item->name;
+            $orderItem->qty = $item->qty;
+            $orderItem->price = $item->price;
+            $orderItem->total = $item->price * $item->qty;
+            $orderItem->save();
         }
 
         session()->flash('succes', 'Kamu berhasil melakukan pesanan');
 
-            Cart::destroy();
-            return response()->json([
-                'message' => 'Pesanan sukses disimpan',
-                'orderId' => $order->id,
-                'status' => true,
-                
-            ]);
-        }
+        Cart::destroy();
 
-    public function thankyou($orderId){
+        session()->forget('code');
+        return response()->json([
+            'message' => 'Pesanan sukses disimpan',
+            'orderId' => $order->id,
+            'status' => true,
 
-        
-        return view('front.thanks',[
+        ]);
+    }
+
+    public function thankyou($orderId)
+    {
+
+
+        return view('front.thanks', [
             'orderId' => $orderId
         ]);
     }
 
-    
-        public function getOrderSummery (Request $request) {
+
+    public function getOrderSummery(Request $request)
+    {
         $subTotal = Cart::subtotal(2, '.', '');
-        $subtotalNumeric = floatval(str_replace(',', '', $subTotal)); // Ubah ke nilai numerik
+        $discount = 0;
+         $discountString = '';
+
+        //apply diskon 
+        if (session()->has('code')) {
+            $code = session()->get('code');
+
+            if ($code->type == 'percent') {
+                $discount = ($code->discount_amount / 100) * $subTotal;
+            } else {
+                $discount = $code->discount_amount;
+            }
+
+            $discountString = '<div class="mt-4" id="discount-response">
+            <strong> ' . session()->get('code')->code . ' </strong>
+            <a class="btn btn-sm btn-danger" id="remove-discount"><i class="fa fa-times"></i></a>
+        </div>';
+        }
 
 
 
-            // $grandTotal = 0; 
-            if ($request->province_id > 0) {
-                $shippingInfo = ShippingCharge::where('province_id', $request->province_id)->first();
 
+        if ($request->province_id > 0) {
+
+            $shippingInfo = ShippingCharge::where('province_id', $request->province_id)->first();
             $totalQty = 0;
             foreach (Cart::content() as $item) {
                 $totalQty += $item->qty;
@@ -354,24 +411,126 @@ class CartController extends Controller
 
             if ($shippingInfo != null) {
                 $shippingCharge = $totalQty * $shippingInfo->amount;
-                $grandTotal = $subTotal + $shippingCharge;
+                $grandTotal = ($subTotal - $discount) + $shippingCharge;
+
+                if ($grandTotal < 0) {
+                    $grandTotal = 0;
+                }
+
 
                 return response()->json([
                     'status' => true,
-                    'grandTotal' => 'Rp ' . number_format($grandTotal, 0, ',', '.'),
-                    'shippingCharge' => 'Rp ' . number_format($shippingCharge, 0, ',', '.'),
+                    'grandTotal' => number_format($grandTotal, 0, ',', '.'),
+                    'discount' => $discount,
+                     'discountString' =>  $discountString,
+                    'shippingCharge' => number_format($shippingCharge, 0, ',', '.'),
+                ]);
+            }
+        } else {
+
+            // Jika $request->province_id <= 0 atau $shippingInfo == null
+            return response()->json([
+                'status' => true,
+                'grandTotal' => number_format(($subTotal - $discount), 0, ',', '.'),
+                'discount' => $discount,
+                'discountString' =>  $discountString,
+                'shippingCharge' => number_format(0, ',', '.'),
+            ]);
+        }
+    }
+
+
+    public function applyDiscount(Request $request)
+    {
+        //dd($request->code);
+
+
+        $code = DiscountCoupon::where('code', $request->code)->first();
+
+        if ($code == null) {
+            return response()->json([
+
+                'status' => false,
+                'message' => 'Kupon diskon tidak valid',
+            ]);
+        }
+
+        // Check if coupon start date is valid or not
+        $now = Carbon::now();
+
+        //echo $now->format('Y-m-d H:i:s');
+
+        if ($code->starts_at != "") {
+            $startDate = Carbon::createFromFormat('Y-m-d H:i:s', $code->starts_at);
+
+            if ($now->lt($startDate)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => ' diskon tidak valid',
                 ]);
             }
         }
 
-        // Jika $request->province_id <= 0 atau $shippingInfo == null
-            return response()->json([
-            'status' => true,
-            'grandTotal' => 'Rp ' . number_format($subtotalNumeric, 0, ',', '.'),
-            'shippingCharge' => 'Rp 0',
-            ]);
+        if ($code->expires_at != "") {
+            $endDate = Carbon::createFromFormat('Y-m-d H:i:s', $code->expires_at);
 
+            if ($now->gt($endDate)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Kupon diskon tidak valid',
+                ]);
+            }
         }
 
-        
+        //maks use chcek
+        //     $couponUsed = Order::where('coupon_code_id', $code->id)->count();
+
+        //     if ($couponUsed >= $code->max_uses){
+        //         return response()->json([
+
+        //         'status' => false,
+        //         'message' => 'Kupon diskon telah habis',
+        //     ]);
+
+        //     //max uses use check
+
+        // }
+        //     $couponUsedByUser = Order::where(['coupon_code_id', $code->id, 'user_id' => Auth::user()->id])->count();
+
+        //     if ($couponUsedByUser >= $code->max_uses_user) {
+        //         return response()->json([
+
+        //             'status' => false,
+        //             'message' => 'Kamu telah menggunakan kupon ini',
+        //         ]);
+        //     }
+        // Cek penggunaan kupon
+        $couponUsed = Order::where('coupon_code_id', $code->id)->count();
+        if ($couponUsed >= $code->max_uses) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Kupon diskon telah habis digunakan',
+            ]);
+        }
+
+        // Cek penggunaan kupon oleh user
+        $couponUsedByUser = Order::where('coupon_code_id', $code->id)
+        ->where('user_id', Auth::user()->id)
+        ->count();
+        if ($couponUsedByUser >= $code->max_uses_user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Kamu telah menggunakan kupon ini',
+            ]);
+        }
+
+        session()->put('code', $code);
+        return $this->getOrderSummery($request);
+    }
+
+    public function removeCoupon(Request $request)
+    {
+        session()->forget('code');
+        return $this->getOrderSummery($request);
+    }
 }

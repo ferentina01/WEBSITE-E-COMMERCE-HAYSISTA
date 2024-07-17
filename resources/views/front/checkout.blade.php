@@ -122,7 +122,8 @@
 
                                     <div class="col-md-12">
                                         <div class="mb-3">
-                                            <input type="text" name="first_name" id="first_name" class="form-control" placeholder="Nama Depan"
+                                            <input type="text" name="first_name" id="first_name" class="form-control"
+                                                placeholder="Nama Depan"
                                                 value="{{ !empty($customerAddress) ? $customerAddress->first_name : '' }}">
                                             <p></p>
                                         </div>
@@ -258,18 +259,43 @@
                         </div> --}}
                                 <div class="d-flex justify-content-between summery-end">
                                     <div class="h6"><strong>Subtotal</strong></div>
-                                    <div class="h6"><strong>Rp {{ number_format($subtotalNumeric, 0, ',', '.') }}</strong></div>
+                                    <div class="h6"><strong>Rp
+                                           {{ number_format(Cart::subtotal(0, '.', ''), 0, ',', '.') }}</strong></div>
+                                </div>
+
+                                <div class="d-flex justify-content-between summery-end">
+                                    <div class="h6"><strong>Diskon</strong></div>
+                                    <div class="h6"><strong id = "discount_value"> {{ number_format($discount, 0, ',', '.') }}</strong></div>
                                 </div>
 
                                 <div class="d-flex justify-content-between mt-2">
                                     <div class="h6"><strong>Pengiriman</strong></div>
-                                    <div class="h6"><strong id="shippingAmount">Rp {{ number_format($totalShippingCharge, 0, ',', '.') }}</strong></div>
+                                    <div class="h6"><strong id="shippingAmount">Rp
+                                           {{ number_format($totalShippingCharge, 0, ',', '.') }}</strong></div>
                                 </div>
                                 <div class="d-flex justify-content-between mt-2 summery-end">
                                     <div class="h5"><strong>Total</strong></div>
                                     <div class="h5"><strong id="grandTotal">Rp {{ number_format($grandTotal, 0, ',', '.') }}</strong>
                                     </div>
                                 </div>
+
+                                <div class="input-group apply-coupan mt-4">
+                                    <input type="text" placeholder="Kode Kupon" class="form-control"
+                                        name="discount_code" id="discount_code">
+                                    <button class="btn btn-dark" type="button" id="apply-discount">Masukkan
+                                        Kupon</button>
+                                </div>
+
+                                <div id= "discount-response-wrapper">
+                                     @if (Session::has('code'))
+                                    <div class="mt-4" id="discount-response">
+                                        <strong>{{ Session::get('code')->code }}</strong>
+                                        <a class="btn btn-sm btn-danger" id="remove-discount"><i class="fa fa-times"></i></a>
+                                    </div>
+                                @endif
+
+                                </div>
+                               
 
 
                                 <div class="card payment-form ">
@@ -486,21 +512,72 @@
 
 
         $("#province").change(function() {
-        $.ajax({
-        url: '{{ route('front.getOrderSummery') }}',
-            type: 'get',
-            data: {
-                province_id: $(this).val()
-            }, 
-            dataType: 'json',
-            success: function(response) {
-                if(response.status == true){
-                   $("#shippingAmount").html(response.shippingCharge);
-                    $("#grandTotal").html(response.grandTotal);
+            $.ajax({
+                url: '{{ route('front.getOrderSummery') }}',
+                type: 'post',
+                data: {
+                    province_id: $(this).val()
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status == true) {
+                        $("#shippingAmount").html(response.shippingCharge);
+                        $("#grandTotal").html(response.grandTotal);
+
+                    }
+                }
+            });
+        });
+
+
+        $("#apply-discount").click(function() {
+            $.ajax({
+                url: '{{ route('front.applyDiscount') }}',
+                type: 'post',
+                data: {
+                    code: $("#discount_code").val(),
+                    province_id: $("#province").val()
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status == true) {
+                        $("#shippingAmount").html(response.shippingCharge);
+                        $("#grandTotal").html(response.grandTotal);
+                        $("#discount_value").html(response.discount);
+                        $("#discount-response-wrapper").html(response.discountString)
+                    }
+                    else{
+                          $("#discount-response-wrapper").html("<span class='text-danger'>"+response.message+"</span>")
+                    }
 
                 }
-            }
+            });
         });
-    });
+
+
+        // $("#remove-discount").click(function() {
+        $('body').on('click',"#remove-discount",function(){
+            $.ajax({
+                url: '{{ route('front.removeCoupon') }}',
+                type: 'post',
+                data: {
+                    province_id: $("#province").val()
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status == true) {
+                        $("#shippingAmount").html(response.shippingCharge);
+                        $("#grandTotal").html(response.grandTotal);
+                        $("#discount_value").html(response.discount);
+                        $("#discount-response").html('');
+                        $("#discount-code").val('');
+
+
+
+                    }
+
+                }
+            });
+        });
     </script>
 @endsection

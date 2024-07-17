@@ -41,7 +41,9 @@ Route::post('/delete-item', [CartController::class, 'deleteItem'])->name('front.
 Route::get('/checkout', [CartController::class, 'checkout'])->name('front.checkout');
 Route::post('/process-checkout', [CartController::class, 'processCheckout'])->name('front.processCheckout');
 Route::get('/thanks/{orderId}', [CartController::class, 'thankyou'])->name('front.thanks');
-Route::get('/get-order-summery', [CartController::class, 'getOrderSummery'])->name('front.getOrderSummery');
+Route::post('/get-order-summery', [CartController::class, 'getOrderSummery'])->name('front.getOrderSummery');
+Route::post('/apply-discount', [CartController::class, 'applyDiscount'])->name('front.applyDiscount');
+Route::post('/remove-discount', [CartController::class, 'removeCoupon'])->name('front.removeCoupon');
 
 
 
@@ -143,8 +145,8 @@ Route::group(['prefix' => 'admin'], function(){
         // Route::delete('/products/{product}', [DiscountCodeController::class, 'destroy'])->name('products.delete');
         // Route::get('/products/{product}/edit', [DiscountCodeController::class, 'edit'])->name('products.edit');
         Route::post('/coupons', [DiscountCodeController::class, 'store'])->name('coupons.store');
-        // Route::put('/products/{product}', [DiscountCodeController::class, 'update'])->name('products.update');
-        // Route::delete('/products/{product}', [DiscountCodeController::class, 'destroy'])->name('products.delete');
+        Route::put('/coupons/{coupon}', [DiscountCodeController::class, 'update'])->name('coupons.update');
+        Route::delete('/coupons/{coupon}', [DiscountCodeController::class, 'destroy'])->name('coupons.delete');
         // Route::get('/get-products', [DiscountCodeController::class, 'getProducts'])->name('products.getProducts');
 
 

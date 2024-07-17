@@ -20,6 +20,7 @@
     <section class="content">
         <!-- Default box -->
         <div class="container-fluid">
+            @include('admin.message')
             <form action="" method="post" id="discountForm" name="discountForm">
                 <div class="card">
                     <div class="card-body">
@@ -43,7 +44,7 @@
 
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="slug">Maksimal Digunakan </label>
+                                    <label for="slug">Kode Kupon Tersedia</label>
                                     <input type="text"  name="max_uses" id="max_uses" class="form-control" 
                                         placeholder="Maksimal Digunakan">
                                     <p></p>
@@ -51,7 +52,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="slug">Penggunaan Maksimal oleh Pengguna</label>
+                                    <label for="slug">Batas pemakaian Kode Kupon untuk pengguna</label>
                                     <input type="text"  name="max_uses_user" id="max_uses_user" class="form-control" 
                                         placeholder="Maksimal Pengguna">
                                     <p></p>
@@ -140,7 +141,7 @@
                     </div>
                 </div>
                 <div class="pb-5 pt-3">
-                    <button type="submit" class="btn btn-primary">Buat Kategori</button>
+                    <button type="submit" class="btn btn-primary">Buat Kupon baru</button>
                     <a href="{{ route('coupons.index') }}" class="btn btn-outline-dark ml-3">Kembali</a>
                 </div>
             </form>
