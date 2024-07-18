@@ -81,7 +81,7 @@
 
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="slug">Minimal Jumlah Diskon</label>
+                                    <label for="slug">Minimal Jumlah Belanja</label>
                                     <input type="text"  name="min_amount" id="min_amount" class="form-control" 
                                         placeholder="Minimal Jumlah Diskon">
                                     <p></p>

@@ -58,13 +58,20 @@
         <div class="container">
             <div class="row align-items-center py-3 d-none d-lg-flex justify-content-between">
                 <div class="col-lg-4 logo">
-                    <a href="{{ route("front.home") }}" class="text-decoration-none">
+
+                    <a href="{{ route('front.home') }}" class="text-decoration-none">
                         <span class="h1 text-uppercase text-primary bg-dark px-2">HAYSISTA</span>
                         <span class="h1 text-uppercase text-dark bg-primary px-2 ml-n1">SHOP</span>
                     </a>
+
                 </div>
                 <div class="col-lg-6 col-6 text-left  d-flex justify-content-end align-items-center">
-                    <a href="account.php" class="nav-link text-dark">Akun Saya</a>
+                    @if (Auth::check())
+                        <a href="{{ route('account.profile') }}" class="nav-link text-dark">Akun Saya</a>
+                    @else
+                        <a href="{{ route('account.login') }}" class="nav-link text-dark">Masuk/Daftar</a>
+                    @endif
+
                     <form action="">
                         <div class="input-group">
                             <input type="text" placeholder="Search For Products" class="form-control"
@@ -163,7 +170,7 @@
                     </ul>
                 </div>
                 <div class="right-nav py-0">
-                    <a href="{{ route("front.cart") }}" class="ml-3 d-flex pt-2">
+                    <a href="{{ route('front.cart') }}" class="ml-3 d-flex pt-2">
                         <i class="fas fa-shopping-cart text-primary"></i>
                     </a>
                 </div>
@@ -225,6 +232,26 @@
             </div>
         </div>
     </footer>
+
+    <!-- Wishlist Modal -->
+    <div class="modal fade" id="wishlistModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">SUKSES</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ asset('front-assets/js/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ asset('front-assets/js/bootstrap.bundle.5.1.3.min.js') }}"></script>
     <script src="{{ asset('front-assets/js/instantpages.5.1.0.min.js') }}"></script>
@@ -273,6 +300,31 @@
 
                 }
             });
+        }
+
+
+        function addToWishList(id) {
+            $.ajax({
+                url: '{{ route('front.addToWishList') }}',
+                type: 'post',
+                data: {
+                    id: id
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status == true) {
+
+                        $("#wishlistModal .modal-body").html(response.message);
+                        $("#wishlistModal").modal('show');
+
+                    } else {
+                        window.location.href = "{{ route('account.login') }}";
+                        // alert(response.message);
+                    }
+
+                }
+            });
+
         }
     </script>
     @yield('customJs')

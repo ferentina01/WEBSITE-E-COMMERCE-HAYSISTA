@@ -5,8 +5,8 @@
         <div class="container">
             <div class="light-font">
                 <ol class="breadcrumb primary-color mb-0">
-                    <li class="breadcrumb-item"><a class="white-text" href="#">Halaman Utama</a></li>
-                    <li class="breadcrumb-item"><a class="white-text" href="#">Belanja</a></li>
+                    <li class="breadcrumb-item"><a class="white-text" href="{{ route('front.home') }}">Halaman Utama</a></li>
+                    <li class="breadcrumb-item"><a class="white-text" href="{{ route('front.shop') }}">Belanja</a></li>
                     <li class="breadcrumb-item">Checkout</li>
                 </ol>
             </div>
@@ -265,7 +265,7 @@
 
                                 <div class="d-flex justify-content-between summery-end">
                                     <div class="h6"><strong>Diskon</strong></div>
-                                    <div class="h6"><strong id = "discount_value"> {{ number_format($discount, 0, ',', '.') }}</strong></div>
+                                    <div class="h6"><strong id = "discount_value">Rp {{ number_format($discount, 0, ',', '.') }}</strong></div>
                                 </div>
 
                                 <div class="d-flex justify-content-between mt-2">
@@ -569,6 +569,7 @@
                         $("#shippingAmount").html(response.shippingCharge);
                         $("#grandTotal").html(response.grandTotal);
                         $("#discount_value").html(response.discount);
+
                         $("#discount-response").html('');
                         $("#discount-code").val('');
 

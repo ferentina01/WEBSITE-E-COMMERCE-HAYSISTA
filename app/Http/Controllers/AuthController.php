@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\User;
+use App\Models\OrderItem;
+use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -10,14 +13,14 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function login(){
+    public function login()
+    {
         return view('front.account.login');
-
     }
 
-    public function register(){
+    public function register()
+    {
         return view('front.account.register');
-
     }
 
 
@@ -51,8 +54,9 @@ class AuthController extends Controller
         }
     }
 
-    public function authenticate(Request $request){
-        $validator = Validator::make($request->all(),[
+    public function authenticate(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required',
 
@@ -92,27 +96,82 @@ class AuthController extends Controller
                 return redirect()->route('account.profile');
             } else {
                 return redirect()->route('account.login')
-                ->withInput($request->only('email'))
+                    ->withInput($request->only('email'))
                     ->with('error', 'Email/sandi Anda salah.');
             }
         } else {
             return redirect()->route('account.login')
-            ->withErrors($validator)
+                ->withErrors($validator)
                 ->withInput($request->only('email'));
         }
-
-
     }
 
-    public function profile(){
+    public function profile()
+    {
         return view('front.account.profile');
-
     }
 
-    public function logout(){
+    public function logout()
+    {
         Auth::logout();
         return redirect()->route('account.login')
-        ->with('success', 'Kamu berhasil keluar');
+            ->with('success', 'Kamu berhasil keluar');
     }
 
+    public function orders()
+    {
+        $user = Auth::user();
+
+        $orders = Order::where('user_id', $user->id)->orderBy('created_at', 'DESC')->get();
+
+        $data['orders'] = $orders;
+        return view('front.account.order', $data);
+    }
+
+    public function orderDetail($id)
+    {
+        $data = [];
+        $user = Auth::user();
+
+        $order = Order::where('user_id', $user->id)->where('id', $id)->first();
+        $data['order'] = $order;
+
+        $orderItems = OrderItem::where('order_id', $id)->get();
+        $data['orderItems'] = $orderItems;
+
+        $orderItemsCount = OrderItem::where('order_id', $id)->count();
+        $data['orderItemsCount'] = $orderItemsCount;
+
+        return view('front.account.order-detail', $data);
+    }
+
+    public function wishlist()
+    {
+        $wishlists = Wishlist::where('user_id', Auth::user()->id)->with('product')->get();
+
+        $data = [];
+        $data['wishlists'] =  $wishlists;
+        return view('front.account.wishlist', $data);
+    }
+
+    public function removeProductFromWishList(Request $request)
+    {
+
+        $wishlist = Wishlist::where('user_id', Auth::user()->id)->where('product_id', $request->id)->first();
+
+        if ($wishlist == null) {
+            session()->flash('error', 'Produk sudah dihapus.');
+            return response()->json([
+                'status' => true,
+            ]);
+        } else {
+
+            Wishlist::where('user_id', Auth::user()->id)->where('product_id', $request->id)->delete();
+
+            session()->flash('success', 'Produk wishlist Berhasil Dihapus.');
+            return response()->json([
+                'status' => true,
+            ]);
+        }
+    }
 }

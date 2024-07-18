@@ -230,8 +230,6 @@ class CartController extends Controller
         ]);
     }
 
-    //
-
 
     public function processCheckout(Request $request)
     {
@@ -280,12 +278,12 @@ class CartController extends Controller
         // step - 3 store data in orders table
 
         if ($request->payment_method == 'cod') {
-            $discountCodeId = '';
+            $discountCodeId = NULL;
             $promoCode = '';
             $shipping = 0;
             $discount = 0;
             $subTotal = Cart::subtotal(0, '.', '');
-            // $grandTotal = $subTotal + $shipping;
+             $grandTotal = $subTotal + $shipping;
 
             //apply diskon 
             if (session()->has('code')) {
@@ -324,6 +322,8 @@ class CartController extends Controller
             $order->discount = $discount;
             $order->coupon_code_id = $discountCodeId;
             $order->coupon_code = $promoCode;
+            $order->payment_status = 'not paid';
+            $order->status = 'pending';
             $order->user_id = $user->id;
             $order->first_name = $request->first_name;
             $order->last_name = $request->last_name;
@@ -351,6 +351,8 @@ class CartController extends Controller
             $orderItem->total = $item->price * $item->qty;
             $orderItem->save();
         }
+        //send email
+        OrderEmail($order->id, 'customer');
 
         session()->flash('succes', 'Kamu berhasil melakukan pesanan');
 
@@ -392,7 +394,7 @@ class CartController extends Controller
             }
 
             $discountString = '<div class="mt-4" id="discount-response">
-            <strong> ' . session()->get('code')->code . ' </strong>
+            <strong>'.session()->get('code')->code.'</strong>
             <a class="btn btn-sm btn-danger" id="remove-discount"><i class="fa fa-times"></i></a>
         </div>';
         }
@@ -421,8 +423,8 @@ class CartController extends Controller
                 return response()->json([
                     'status' => true,
                     'grandTotal' => number_format($grandTotal, 0, ',', '.'),
-                    'discount' => $discount,
-                     'discountString' =>  $discountString,
+                    'discount' => number_format(($discount), 0, ',', '.'),
+                     'discountString' => $discountString,
                     'shippingCharge' => number_format($shippingCharge, 0, ',', '.'),
                 ]);
             }
@@ -432,7 +434,7 @@ class CartController extends Controller
             return response()->json([
                 'status' => true,
                 'grandTotal' => number_format(($subTotal - $discount), 0, ',', '.'),
-                'discount' => $discount,
+                'discount' => number_format(( $discount), 0, ',', '.'),
                 'discountString' =>  $discountString,
                 'shippingCharge' => number_format(0, ',', '.'),
             ]);
@@ -466,7 +468,7 @@ class CartController extends Controller
             if ($now->lt($startDate)) {
                 return response()->json([
                     'status' => false,
-                    'message' => ' diskon tidak valid',
+                    'message' => ' Kupon diskon belum aktif',
                 ]);
             }
         }
@@ -477,7 +479,7 @@ class CartController extends Controller
             if ($now->gt($endDate)) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Kupon diskon tidak valid',
+                    'message' => 'Kupon diskon sudah kadaluarsa',
                 ]);
             }
         }
@@ -523,6 +525,19 @@ class CartController extends Controller
                 'message' => 'Kamu telah menggunakan kupon ini',
             ]);
         }
+
+        $subTotal = Cart::subtotal(0, '.', '');
+        //min jumlah
+        if($code->min_amount > 0 ){
+            if ($subTotal < $code->min_amount){
+                return response()->json([
+                    'status' => false,
+                'message' =>'Minimal jumlah Pembelanjaan anda harus Rp '. number_format($code->min_amount,0, ',', '.').'.',
+
+                ]);
+            }
+        }
+        
 
         session()->put('code', $code);
         return $this->getOrderSummery($request);
