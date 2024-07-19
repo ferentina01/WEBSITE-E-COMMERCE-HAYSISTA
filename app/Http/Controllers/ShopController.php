@@ -52,13 +52,15 @@ class ShopController extends Controller
             if($request->get('price_max') == 5000000){
                 $products = $products->whereBetween('price', [intval($request->get('price_min')),5000000]);
 
-
             }else{
                 $products = $products->whereBetween('price', [intval($request->get('price_min')), intval($request->get('price_max'))]);
 
             }
 
 
+        }
+        if (!empty($request->get('search'))) {
+            $products = $products->where('title', 'like', '%' . $request->get('search') . '%');
         }
 
         if ($request->get('sort') != ''){
@@ -107,7 +109,7 @@ class ShopController extends Controller
         $relatedProducts = [];
         if ($product->related_products != '') {
             $productArray = explode(',', $product->related_products);
-            $relatedProducts = Product::whereIn('id', $productArray)->get();
+            $relatedProducts = Product::whereIn('id', $productArray)->where('status',1)->get();
         }  
 
         $data['product'] = $product;

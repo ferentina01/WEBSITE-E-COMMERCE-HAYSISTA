@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ContactEmail;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Wishlist;
+use App\Models\Page;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ContactEmil;
+use App\Models\User;
 
 class FrontController extends Controller
 {
@@ -64,5 +70,57 @@ class FrontController extends Controller
         ]);
 
     }
+
+    public function page($slug){
+        $page = Page::where('slug',$slug)->first();
+        if($page == null){
+            abort(404);
+        }
+
+        return view('front.page',[
+         'page' => $page
+        //dd($page);
+    ]);
+    }
+
+    public function sendContactEmail(Request $request){
+        
+            $validator = Validator::make($request->all(),[
+            
+                'name' => 'required',
+                'email' => 'required|email', 
+                'subject' => 'required|min:10'
+            ]);
+
+            if ($validator->passes()) {
+
+                //send email
+                                
+                $mailData = [
+                    'name' => $request->name, 
+                    'email' => $request->email, 
+                    'subject' => $request->subject, 
+                    'message' => $request->message,
+                    'mail_subject' => 'Kamu Menerima Kontak Email'
+                ];
+
+                $admin = User::where('id',3)->first();
+                Mail::to($admin->email)->send(new ContactEmail($mailData));
+
+                session()->flash('success', 'Trimakasih sudah menghubungi kami, untuk pertanyaan anda kami akan segera menghubungi anda secepatnya.');
+
+                return response()->json([
+                'status' => true,
+                ]);
+            } else{
+                return response()->json([
+                
+                'status' => false,
+                'errors' => $validator->errors()
+                ]);
+            }
+        }
+          
     
 }
+

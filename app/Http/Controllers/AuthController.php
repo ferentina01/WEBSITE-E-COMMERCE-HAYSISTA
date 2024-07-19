@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\User;
+use App\Models\CustomerAddress;
 use App\Models\OrderItem;
+use App\Models\Province;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -108,8 +110,114 @@ class AuthController extends Controller
 
     public function profile()
     {
-        return view('front.account.profile');
+        $userId = Auth::user()->id;
+        $provinces = Province::orderBy('name', 'ASC')->get();
+        $user = User::where('id', Auth::user()->id)->first();
+
+        $address = CustomerAddress::where('user_id', $userId)->first();
+        return view('front.account.profile', [
+            'user' => $user,
+            'provinces' => $provinces,
+            'address' => $address
+        ]);
     }
+
+    public function updateProfile(Request $request)
+    {
+        $userId = Auth::user()->id;
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'email' => 'required|email|unique:users,email,' . $userId . ',id',
+            'phone' => 'required'
+        ]);
+
+
+
+        if ($validator->passes()) {
+            $user = User::find($userId);
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->phone = $request->phone;
+            $user->save();
+
+            // Set flash message
+            session()->flash('success', 'Profil Berhasil Diupdate');
+
+            // Return JSON response
+            return response()->json([
+                'status' => true,
+                'message' => 'Profil berhasil diupdate'
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors()
+            ]);
+        }
+    }
+
+
+    public function updateAddress(Request $request)
+    {
+        $userId = Auth::user()->id;
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|min:5',
+            'last_name' => 'required',
+            'email' => 'required|email',
+            'province_id' => 'required',
+            'address' => 'required',
+            'city' => 'required',
+            'subdistrict' => 'required',
+            'zip' => 'required',
+            'mobile' => 'required'
+        ]);
+
+
+
+        if ($validator->passes()) {
+            // $user = User::find($userId);
+            // $user->name = $request->name;
+            // $user->email = $request->email;
+            // $user->phone = $request->phone;
+            // $user->save();
+
+            CustomerAddress::updateOrCreate(
+                ['user_id' => $userId],
+                [
+                    'user_id' => $userId,
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'email' => $request->email,
+                    'mobile' => $request->mobile,
+                    'province_id' => $request->province_id,
+                    'address' => $request->address,
+                    'apartment' => $request->apartment,
+                    'city' => $request->city,
+                    'subdistrict' => $request->subdistrict,
+                    'zip' => $request->zip,
+                ]
+            );
+
+
+            // Set flash message
+            session()->flash('success', 'Profil Berhasil Diupdate');
+
+            // Return JSON response
+            return response()->json([
+                'status' => true,
+                'message' => 'Profil berhasil diupdate'
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors()
+            ]);
+        }
+    }
+
+
+
+
 
     public function logout()
     {
@@ -174,4 +282,69 @@ class AuthController extends Controller
             ]);
         }
     }
+
+    public function showchangePasswordForm()
+    {
+        return view('front.account.change-password');
+    }
+
+    public function changePassword(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+
+            'old_password' => 'required',
+            'new_password' => 'required|min:5',
+            'confirm_password' => 'required|same:new_password',
+        ]);
+
+        if ($validator->passes()) {
+            $user = User::select('id','password')->where('id',Auth::user()->id)->first();
+
+
+            if (!Hash::check($request->old_password, $user->password)) {
+                session()->flash('error', 'Kata sandi lama Anda salah, silakan coba lagi.');
+                return response()->json([
+                    'status' => true,
+                    
+                ]);
+            }
+
+            
+            User::where('id', $user->id)->update([
+                'password' => Hash::make($request->new_password)
+
+            ]);
+
+            session()->flash('success', 'Anda telah berhasil mengubah kata sandi anda.');
+            
+            return response()->json([
+                'status' => true,
+            ]);
+
+        } else {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors()
+            ]);
+        }
+    }
+
+    
+    public function forgotPassword() {
+        return view('front.account.forgot-password');
+
+    }
+    
+    public function processForgotPassword (Request $request) { 
+        $validator = Validator::make($request->all(),[
+             'email' => 'required|email|exists:users, email'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('front.forgotPassword')->withInput()->withErrors($validator);
+
+        }
+    }
+
 }

@@ -66,8 +66,8 @@
                             <i class="fas fa-user-cog mr-2"></i> Settings
                         </a>
                         <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-lock mr-2"></i> Change Password
+                        <a href="{{ route("admin.showChangePasswordForm") }}" class="dropdown-item">
+                            <i class="fas fa-lock mr-2"></i> Ubah Sandi
                         </a>
                         <div class="dropdown-divider"></div>
                         <a href="{{ route('admin.logout') }}" class="dropdown-item text-danger">

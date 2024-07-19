@@ -72,15 +72,15 @@
                         <a href="{{ route('account.login') }}" class="nav-link text-dark">Masuk/Daftar</a>
                     @endif
 
-                    <form action="">
+                    <form action="{{ route('front.shop') }}" method="get">
                         <div class="input-group">
-                            <input type="text" placeholder="Search For Products" class="form-control"
-                                aria-label="Amount (to the nearest dollar)">
-                            <span class="input-group-text">
+                            <input value="{{ Request::get('search') }}" ="text" placeholder="Search For Products" class="form-control" name="search" id="search">
+                            <button type="submit" class="input-group-text">
                                 <i class="fa fa-search"></i>
-                            </span>
+                            </button>
                         </div>
                     </form>
+
                 </div>
             </div>
         </div>
@@ -199,11 +199,17 @@
                     <div class="footer-card">
                         <h3>Tautan Penting</h3>
                         <ul>
-                            <li><a href="about-us.php" title="About">Tentang</a></li>
+                            @if(staticPages()->isNotEmpty())
+                                @foreach (staticPages () as $page)
+                                <li><a href="{{ route('front.page',$page->slug) }}" title="{{ $page->name }}">{{ $page->name }}</a></li>
+                                @endforeach
+                            @endif    
+
+                            {{-- <li><a href="about-us.php" title="About">Tentang</a></li>
                             <li><a href="contact-us.php" title="Contact Us">Hubungi kami</a></li>
                             <li><a href="#" title="Privacy">Privasi</a></li>
                             <li><a href="#" title="Privacy">Syarat & Ketentuan</a></li>
-                            <li><a href="#" title="Privacy">Kebijakan pengembalian</a></li>
+                            <li><a href="#" title="Privacy">Kebijakan pengembalian</a></li> --}}
                         </ul>
                     </div>
                 </div>

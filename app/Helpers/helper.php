@@ -3,6 +3,7 @@
 use App\Mail\OrderEmail;
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\Page;
 use App\Models\ProductImage;
 use App\Models\Province;
 use Illuminate\Support\Facades\Mail;
@@ -45,6 +46,11 @@ function OrderEmail($orderId, $userType="customer"){
 function getProvinceInfo($id)
 {
     return Province::where('id', $id)->first();
+}
+
+function staticPages(){
+    $pages = Page::orderBy('name','ASC')->get();
+    return $pages;
 }
 
 ?>

@@ -23,8 +23,8 @@
                             @if ($product->product_images)
                                 @foreach ($product->product_images as $key => $productImage)
                                     <div class="carousel-item {{ $key == 0 ? 'active' : '' }}">
-                                        <img class="w-100 h-100" src="{{ asset('uploads/product/' . $productImage->image) }}"
-                                            alt="Image">
+                                        <img class="w-100 h-100"
+                                            src="{{ asset('uploads/product/' . $productImage->image) }}" alt="Image">
                                     </div>
                                 @endforeach
                             @endif
@@ -63,7 +63,25 @@
                         {!! $product->short_description !!}
                         <h2 class="price ">Rp {{ number_format($product->price, 0, ',', '.') }}</h2>
 
-                        <a href="javascript:void(0);" onclick="addToCart({{ $product->id }});" class="btn btn-dark"><i class="fas fa-shopping-cart"></i> Masukkan Keranjang</a>
+                        {{-- <a href="javascript:void(0);" onclick="addToCart({{ $product->id }});" class="btn btn-dark"><i
+                                class="fas fa-shopping-cart"></i> &NonBreakingSpace;Masukkan Keranjang</a> --}}
+
+                        @if ($product->track_qty == 'Yes')
+                            @if ($product->qty > 0)
+                                <a class="btn btn-dark" href="javascript:void(0);"
+                                    onclick="addToCart({{ $product->id }});">
+                                    <i class="fa fa-shopping-cart"></i> &NonBreakingSpace;Masukkan Keranjang
+                                </a>
+                            @else
+                                <a class="btn btn-dark" href="javascript:void(0);">
+                                    Maaf Stok Habis
+                                </a>
+                            @endif
+                        @else
+                            <a class="btn btn-dark" href="javascript:void(0);" onclick="addToCart({{ $product->id }});">
+                                <i class="fa fa-shopping-cart"></i> &NonBreakingSpace;Masukkan Keranjang
+                            </a>
+                        @endif
                     </div>
                 </div>
 
@@ -77,7 +95,8 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping"
-                                    type="button" role="tab" aria-controls="shipping" aria-selected="false">Pengiriman &
+                                    type="button" role="tab" aria-controls="shipping" aria-selected="false">Pengiriman
+                                    &
                                     Pengembalian</button>
                             </li>
                             <li class="nav-item" role="presentation">
@@ -104,15 +123,15 @@
         </div>
     </section>
 
-     @if (!empty($relatedProducts))
-    <section class="pt-5 section-8">
-        <div class="container">
-            <div class="section-title">
-                <h2>Produk Serupa</h2>
-            </div>
-            <div class="col-md-12">
-                <div id="related-products" class="carousel">
-                   
+    @if (!empty($relatedProducts))
+        <section class="pt-5 section-8">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Produk Serupa</h2>
+                </div>
+                <div class="col-md-12">
+                    <div id="related-products" class="carousel">
+
                         @foreach ($relatedProducts as $relProduct)
                             @php
                                 $productImage = $relProduct->product_images->first();
@@ -123,21 +142,37 @@
 
 
                                     <a href="" class="product-img">
-                                             @if (!empty($productImage->image))
-                                                <img class="card-img-top"
-                                                    src="{{ asset('uploads/product/' . $productImage->image) }}" />
-                                            @else
-                                                No Image Found
-                                            @endif
-                                        </a>
+                                        @if (!empty($productImage->image))
+                                            <img class="card-img-top"
+                                                src="{{ asset('uploads/product/' . $productImage->image) }}" />
+                                        @else
+                                            No Image Found
+                                        @endif
+                                    </a>
 
 
                                     <a class="whishlist" href="222"><i class="far fa-heart"></i></a>
 
                                     <div class="product-action">
-                                        <a class="btn btn-dark" href="javascript:void(0);" onclick="addToCart({{ $product->id }});">
-                                            <i class="fa fa-shopping-cart"></i> Masukkan Keranjang
-                                        </a>
+
+                                        @if ($relProduct->track_qty == 'Yes')
+                                            @if ($relProduct->qty > 0)
+                                                <a class="btn btn-dark" href="javascript:void(0);"
+                                                    onclick="addToCart({{ $relProduct->id }});">
+                                                    <i class="fa fa-shopping-cart"></i> Masukkan Keranjang
+                                                </a>
+                                            @else
+                                                <a class="btn btn-dark" href="javascript:void(0);">
+                                                    Maaf Stok Habis
+                                                </a>
+                                            @endif
+                                        @else
+                                            <a class="btn btn-dark" href="javascript:void(0);"
+                                                onclick="addToCart({{ $relProduct->id }});">
+                                                <i class="fa fa-shopping-cart"></i> Masukkan Keranjang
+                                            </a>
+                                        @endif
+
                                     </div>
                                 </div>
                                 <div class="card-body text-center mt-3">
@@ -153,9 +188,9 @@
                                 </div>
                             </div>
                         @endforeach
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
-   @endif
+        </section>
+    @endif
 @endsection

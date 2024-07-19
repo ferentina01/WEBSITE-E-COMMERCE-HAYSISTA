@@ -92,27 +92,30 @@
 
                       <div class="card">
                           <div class="card-body">
-                            <input type="text" class="js-range-slider" name="my_range" value=""/>
+                              <input type="text" class="js-range-slider" name="my_range" value="" />
                           </div>
                       </div>
                   </div>
-                            
-                          
-                        
+
+
+
                   <div class="col-md-9">
                       <div class="row pb-3">
                           <div class="col-12 pb-1">
                               <div class="d-flex align-items-center justify-content-end mb-4">
                                   <div class="ml-2">
 
-                          <select name="sort" id="sort" class="form-control">
-                            <option value="latest" {{ ($sort == 'latest') ? 'selected' : '' }}>Terbaru</option>
-                            <option value="price_desc" {{ ($sort == 'price_desc') ? 'selected' : '' }}>Harga Tinggi</option>
-                            <option value="price_asc" {{ ($sort == 'price_asc') ? 'selected' : '' }}>Harga Rendah</option>
+                                      <select name="sort" id="sort" class="form-control">
+                                          <option value="latest" {{ $sort == 'latest' ? 'selected' : '' }}>Terbaru
+                                          </option>
+                                          <option value="price_desc" {{ $sort == 'price_desc' ? 'selected' : '' }}>Harga
+                                              Tinggi</option>
+                                          <option value="price_asc" {{ $sort == 'price_asc' ? 'selected' : '' }}>Harga
+                                              Rendah</option>
 
 
-                          </select>
-                               </div>
+                                      </select>
+                                  </div>
                               </div>
                           </div>
 
@@ -128,7 +131,7 @@
                                           <div class="product-image position-relative">
 
 
-                                              <a href="{{ route("front.product",$product->slug) }}" class="product-img">
+                                              <a href="{{ route('front.product', $product->slug) }}" class="product-img">
 
                                                   @if (!empty($productImage->image))
                                                       <img class="ard-img-top"
@@ -136,12 +139,27 @@
                                                   @else
                                                       No Image Found
                                                   @endif
-                                                   <a onclick="addToWishList({{ $product->id }})" class="whishlist" href="javascript:void(0);"><i class="far fa-heart"></i></a>
+                                                  <a onclick="addToWishList({{ $product->id }})" class="whishlist"
+                                                      href="javascript:void(0);"><i class="far fa-heart"></i></a>
 
                                                   <div class="product-action">
-                                                      <a class="btn btn-dark" href="javascript:void(0);" onclick="addToCart({{ $product->id }});">
-                                                          <i class="fa fa-shopping-cart"></i> masukkan keranjang
-                                                      </a>
+                                                      @if ($product->track_qty == 'Yes')
+                                                          @if ($product->qty > 0)
+                                                              <a class="btn btn-dark" href="javascript:void(0);"
+                                                                  onclick="addToCart({{ $product->id }});">
+                                                                  <i class="fa fa-shopping-cart"></i> Masukkan Keranjang
+                                                              </a>
+                                                          @else
+                                                              <a class="btn btn-dark" href="javascript:void(0);">
+                                                                  Maaf Stok Habis
+                                                              </a>
+                                                          @endif
+                                                      @else
+                                                          <a class="btn btn-dark" href="javascript:void(0);"
+                                                              onclick="addToCart({{ $product->id }});">
+                                                              <i class="fa fa-shopping-cart"></i> Masukkan Keranjang
+                                                          </a>
+                                                      @endif
                                                   </div>
                                           </div>
                                           <div class="card-body text-center mt-3">
@@ -162,7 +180,7 @@
 
 
                           <div class="col-md-12 pt-5">
-                            {{ $products->links() }}
+                              {{ $products->links() }}
                           </div>
                       </div>
                   </div>
@@ -214,58 +232,64 @@
               window.location.href = url + '&brand=' + brands.toString();
           }
       </script> --}}
-<script>
-     
-    rangeSlider = $(".js-range-slider").ionRangeSlider({
-        type: "double",
-        min: 0,
-        max: 5000000,
-        from: {{ $priceMin }},
-        to: {{ $priceMax }},
-        step: 100000,
-        skin: "round",
-        max_postfix: "+",
-        prefix: "Rp",
-        onFinish: function() {
-            apply_filters();
-        }
-    });
+      <script>
+          rangeSlider = $(".js-range-slider").ionRangeSlider({
+              type: "double",
+              min: 0,
+              max: 5000000,
+              from: {{ $priceMin }},
+              to: {{ $priceMax }},
+              step: 100000,
+              skin: "round",
+              max_postfix: "+",
+              prefix: "Rp",
+              onFinish: function() {
+                  apply_filters();
+              }
+          });
 
-    var slider = $(".js-range-slider").data("ionRangeSlider");
+          var slider = $(".js-range-slider").data("ionRangeSlider");
 
-    $(".brand-label").change(function() {
-        apply_filters();
-    });
+          $(".brand-label").change(function() {
+              apply_filters();
+          });
 
-    $("#sort").change(function(){
-        apply_filters();
-    });
+          $("#sort").change(function() {
+              apply_filters();
+          });
 
-    function apply_filters() {
-        var brands = [];
+          function apply_filters() {
+              var brands = [];
 
-        $(".brand-label").each(function() {
-            if ($(this).is(":checked") == true) {
-                brands.push($(this).val());
-            }
-        });
+              $(".brand-label").each(function() {
+                  if ($(this).is(":checked") == true) {
+                      brands.push($(this).val());
+                  }
+              });
 
-        var url = '{{ url()->current() }}?';
+              var url = '{{ url()->current() }}?';
 
-        
 
-        //brand Filter
-        if (brands.length > 0){
-            url += '&brand=' + brands.toString();
-        }
 
-        //price range filter
-        url += '&price_min=' + slider.result.from + '&price_max=' + slider.result.to;
+              //brand Filter
+              if (brands.length > 0) {
+                  url += '&brand=' + brands.toString();
+              }
 
-        //sorting filter
-        url += '&sort=' + $("#sort").val();
-        window.location.href = url;
-    }
+              //price range filter
+              url += '&price_min=' + slider.result.from + '&price_max=' + slider.result.to;
 
-</script>
+
+              //sorting filter
+              var keyword = $("#search").val();
+              if(keyword.length > 0 ) {
+                url += '&search='+keyword;
+              }
+
+              url += '&sort=' + $("#sort").val();
+              window.location.href = url;
+
+
+          }
+      </script>
   @endsection
