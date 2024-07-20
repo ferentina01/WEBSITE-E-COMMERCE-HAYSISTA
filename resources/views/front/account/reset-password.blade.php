@@ -6,7 +6,7 @@
             <div class="light-font">
                 <ol class="breadcrumb primary-color mb-0">
                     <li class="breadcrumb-item"><a class="white-text" href="#">Halaman Utama</a></li>
-                    <li class="breadcrumb-item">Lupa Sandi</li>
+                    <li class="breadcrumb-item">Reset Sandi</li>
                 </ol>
             </div>
         </div>
@@ -27,12 +27,21 @@
             @endif
         
         <div class="login-form">
-            <form action="{{ route('front.processForgotPassword') }}" method="post">
+            <form action="{{ route('front.processResetPassword') }}" method="post">
                 @csrf
-                <h4 class="modal-title">Lupa Sandi</h4>
+                <input type="hidden" name="token" value="{{ $token }}">
+                <h4 class="modal-title">Reset Sandi</h4>
                 <div class="form-group">
-                    <input type="text" class="form-control @error('email') is-invalid @enderror" placeholder="Email" name="email" value="{{ old('email') }}">
-                    @error('email')
+                    <input type="password" class="form-control @error('new_password') is-invalid @enderror" placeholder="Kata Sandi Baru" name="new_password" value="">
+                    @error('new_password')
+                    <p class="invalid-feedback">{{ $message }}</p>
+
+                    @enderror
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" class="form-control @error('confirm_password') is-invalid @enderror" placeholder="Konfirmasi Kata sandi Baru" name="confirm_password" value="">
+                    @error('confirm_password')
                     <p class="invalid-feedback">{{ $message }}</p>
 
                     @enderror
@@ -41,7 +50,7 @@
                 
                 <input type="submit" class="btn btn-dark btn-block btn-lg" value="Submit">
             </form>
-            <div class="text-center small"><a href="{{ route('account.login') }}">Login</a></div>
+            <div class="text-center small"><a href="{{ route('account.login') }}">Klik Disini Untuk Masuk</a></div>
         </div>
         </div>
     </section>
