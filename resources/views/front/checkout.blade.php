@@ -308,6 +308,17 @@
                                                     id="payment_method_one"> <label for="payment_method_one"
                                                     class="form-check-label">COD</label>
                                             </div>
+                                            
+                                            <div class="">
+                                                <input type="radio" name="payment_method" value="cod"
+                                                    id="payment_method_three">
+                                                <label for="payment_method_three" class="form-check-label">Transfer </label>
+                                            </div>
+                                                <div class="mb-3">
+                                                       <button type="submit" class="btn btn-primary">Upload</button>
+                                                </div>
+
+
                                             <div class="">
                                                 <input type="radio" name="payment_method" value="cod"
                                                     id="payment_method_two">

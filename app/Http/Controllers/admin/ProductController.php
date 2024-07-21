@@ -7,13 +7,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\Product;
 use Illuminate\Support\Facades\Validator;
-use App\Models\TempImage;
+use App\Models\Product;
 use App\Models\ProductImage;
 // use Intervention\Image\ImageManager;
 use Illuminate\Support\Facades\File;
+use App\Models\TempImage;
 use App\Models\SubCategory;
+use App\Models\ProductRating;
 
 
 
@@ -266,28 +267,59 @@ class ProductController extends Controller
 
         // File::delete(public_path('/uploads/product') . '/' . $$product->image);
         
-        public function getProducts(Request $request){
+    public function getProducts(Request $request){
 
-            $tempProduct = [];
-            if($request->term != ""){
-                $products = Product::where('title', 'like', '%'.$request->term.'%')->get();
-            }
-
-            if($products != null){
-
-                foreach($products as $product){
-                    $tempProduct[] = array('id' => $product->id, 'text' => $product->title);
-                }
-            }
-
-            return response()->json([
-                'tags'=> $tempProduct,
-                'status'=> true
-            ]);
-
+        $tempProduct = [];
+        if($request->term != ""){
+            $products = Product::where('title', 'like', '%'.$request->term.'%')->get();
         }
 
+        if($products != null){
+
+            foreach($products as $product){
+                $tempProduct[] = array('id' => $product->id, 'text' => $product->title);
+            }
+        }
+
+        return response()->json([
+            'tags'=> $tempProduct,
+            'status'=> true
+        ]);
+
     }
+
+    public function productRatings(Request $request){
+                
+    $ratings = ProductRating::select('product_ratings.*', 'products.title as productTitle')->orderBy('created_at','DESC');
+    $ratings = $ratings->leftJoin('products', 'products.id', 'product_ratings.product_id');
+
+        if ($request->get('keyword') != "") {
+            $ratings = $ratings->orWhere('products.title', 'like', '%' . $request->keyword . '%');
+            $ratings = $ratings->orwhere('product_ratings.username', 'like', '%' . $request->keyword . '%');
+        }
+
+
+    $ratings = $ratings->paginate(10);
+
+        return view('admin.products.ratings',[
+            'ratings' => $ratings
+        ]);
+    }
+
+
+
+    public function changeRatingStatus(Request $request)
+    {
+        $productRating = ProductRating::find($request->id);
+        $productRating->status = $request->status;
+        $productRating->save();
+        session()->flash('success', 'Status Berhasil diubah.');
+        return response()->json([
+            'status' => true
+        ]);
+
+    }
+}
     
 
     

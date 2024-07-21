@@ -60,6 +60,7 @@ Route::get('/forgot-password', [AuthController::class, 'forgotPassword'])->name(
 Route::post('/process-forgot-password', [AuthController::class, 'processForgotPassword'])->name('front.processForgotPassword');
 Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])->name('front.resetPassword');
 Route::post('/process-reset-password', [AuthController::class, 'processResetPassword'])->name('front.processResetPassword');
+Route::post('/save-rating/{productId}', [ShopController::class, 'saveRating'])->name('front.saveRating');
 
 
 
@@ -148,7 +149,7 @@ Route::group(['prefix' => 'admin'], function(){
         //Pages route
         Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
         Route::get('/pages/create', [PageController::class, 'create'])->name('pages.create');
-         Route::post('/pages', [PageController::class, 'store'])->name('pages.store');
+        Route::post('/pages', [PageController::class, 'store'])->name('pages.store');
         Route::get('/pages/{page}/edit', [PageController::class, 'edit'])->name('pages.edit');
         Route::put('/pages/{page}', [PageController::class, 'update'])->name('pages.update');
         Route::delete('/pages/{page}', [PageController::class, 'destroy'])->name('pages.delete');
@@ -163,8 +164,8 @@ Route::group(['prefix' => 'admin'], function(){
         Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
         Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.delete');
         Route::get('/get-products', [ProductController::class, 'getProducts'])->name('products.getProducts');
-
-
+        Route::get('/ratings', [ProductController::class, 'productRatings'])->name('products.productRatings');
+        Route::get('/change-rating-status', [ProductController::class, 'changeRatingStatus'])->name('products.changeRatingStatus');
 
         
         Route::get('/product-subcategories', [ProductSubCategoryController::class, 'index'])->name('product-subcategories.index');
@@ -198,6 +199,8 @@ Route::group(['prefix' => 'admin'], function(){
         Route::get('/change-password', [SettingController::class, 'showChangePasswordForm'])->name('admin.showChangePasswordForm');
         Route::post('/process-change-password', [SettingController::class, 'processChangePassword'])->name('admin.processChangePassword');
 
+        //transfer
+        Route::post('/upload/transfer/{orderId}', [ShopController::class, 'uploadTransferProof'])->name('upload.transfer');
 
 
 

@@ -7,6 +7,9 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\SubCategory;
 use App\Models\Brand;
+use Illuminate\Support\Facades\Validator;
+use App\Models\ProductRating;
+use App\Models\Order;
 
 class ShopController extends Controller
 {
@@ -99,7 +102,12 @@ class ShopController extends Controller
     }
 
     public function product($slug){
-        $product = Product::where('slug',$slug)->with('product_images')->first();
+        $product = Product::where('slug',$slug)
+        ->withCount('product_ratings')
+        ->withSum('product_ratings','rating')
+        ->with(['product_images', 'product_ratings'])->first();
+
+        //dd($product);
         if($product  == null){
             abort(404);
         }
@@ -115,8 +123,98 @@ class ShopController extends Controller
         $data['product'] = $product;
         $data['relatedProducts'] = $relatedProducts;
 
+        //Rating calculate
+        $avgRating = '0.00';
+        $avgRatingPer = 0;
+        if ($product->product_ratings_count > 0) {
+     
+        $avgRating = number_format(($product->product_ratings_sum_rating/$product->product_ratings_count),2);
+        $avgRatingPer = ($avgRating*100)/5;
+
+        }
+        $data['avgRating'] = $avgRating;
+        $data['avgRatingPer'] = $avgRatingPer;
+        
+
 
         return view('front.product',$data);
 
     }
+
+    public function saveRating($id,Request $request){
+        
+        $validator = Validator::make($request->all(),[
+       
+        'name' => 'required|min:5', 
+        'email' => 'required|email', 
+        'comment' => 'required|min:10', 
+        'rating' => 'required'
+
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([ 
+            'status' => false,
+            'errors' => $validator->errors()
+            ]);
+        }
+
+
+        
+        $count = ProductRating::where('email', $request->email)->count(); 
+        if ($count > 0) {
+            session()->flash('error', 'Kamu sudah rating product ini');
+            return response()->json([
+            'status' => true,
+            ]);
+        }
+
+        $productRating = new ProductRating;
+        $productRating->product_id = $id;
+        $productRating->username = $request->name;
+        $productRating->email = $request->email;
+        $productRating->comment = $request->comment;
+        $productRating->rating = $request->rating;
+        $productRating->status = 0;
+        $productRating->save();
+
+        session()->flash('success', 'Trimakasih Untuk Rating Anda.');
+
+        return response()->json([
+            'status' => true,
+            '$message' => 'Trimakasih Untuk Rating Anda.'
+        ]);
+
+    }
+
+    public function uploadTransferProof($orderId, Request $request)
+    {
+        $order = Order::findOrFail($orderId);
+
+        // Validasi upload bukti transfer
+        $validator = Validator::make($request->all(), [
+            'transfer_proof' => 'required|image|max:2048', // max 2MB
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        // Upload dan simpan gambar bukti transfer
+        $image = $request->file('transfer_proof');
+        $imageName = 'transfer_' . time() . '.' . $image->getClientOriginalExtension();
+        $image->move(public_path('uploads/transfer'), $imageName);
+
+        // Update status order ke "Menunggu Konfirmasi"
+        $order->status = 'Menunggu Konfirmasi';
+        $order->transfer_proof = $imageName; // simpan nama file bukti transfer
+        $order->save();
+
+        // Redirect atau kirim pesan sukses
+        return redirect()->back()->with('success', 'Bukti transfer berhasil diupload.');
+    }
+
+  
+
+
 }
