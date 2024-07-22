@@ -71,12 +71,7 @@
                         <p>Pesanan</p>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('upload.transfer', ['orderId' => $order->id]) }}" class="nav-link">
-                        <i class="nav-icon fas fa-upload"></i>
-                        <p> Bukti Transfer</p>
-                    </a>
-                </li>
+                
 
                 <li class="nav-item">
                     <a href="{{ route('coupons.index') }}" class="nav-link">

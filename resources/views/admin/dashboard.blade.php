@@ -26,7 +26,7 @@
 								<div class="small-box card">
 									<div class="inner">
 										<h3>{{ $totalOrders }}</h3>
-										<p>Total Pesanan</p>
+										<p>Total pesanan </p>
 									</div>
 									<div class="icon">
 										<i class="ion ion-bag"></i>
@@ -40,7 +40,7 @@
 								<div class="small-box card">
 									<div class="inner">
 										<h3>{{ $totalProducts }}</h3>
-										<p>Total Pesanan</p>
+										<p>Total Pesanan produk</p>
 									</div>
 									<div class="icon">
 										<i class="ion ion-stats-bars"></i>
